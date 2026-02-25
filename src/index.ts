@@ -26,6 +26,7 @@ export {
   SearchListParams,
   MrpStockHistoryParams,
   MrpStockNotesParams,
+  VesselDetailsReportParams,
 } from './client/VintraceClient';
 export type {
   ProductAnalysisResponse,

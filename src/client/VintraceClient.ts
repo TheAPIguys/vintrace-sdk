@@ -160,6 +160,22 @@ export interface MrpStockNotesParams {
   maxResult?: number;
 }
 
+export interface VesselDetailsReportParams {
+  limit?: number;
+  offset?: number;
+  asAtDate?: number;
+  businessUnit?: string;
+  batch?: string;
+  vessel?: string;
+  owner?: string;
+  extraFields?: string;
+  vesselId?: number;
+  productId?: number;
+  wineryId?: number;
+  wineryName?: string;
+  vesselType?: 'TANK' | 'BIN' | 'BARREL' | 'BARREL_GROUP' | 'BIN_GROUP' | 'PRESS' | 'TANKER';
+}
+
 export class VintraceClient {
   public readonly baseUrl: string;
   public readonly organization: string;
@@ -271,6 +287,10 @@ class VintraceV7Api {
 
   get bookings() {
     return new BookingsClient(this.client);
+  }
+
+  get vesselDetailsReport() {
+    return new VesselDetailsReportClient(this.client);
   }
 }
 
@@ -615,6 +635,14 @@ class BookingsClient {
 
   deactivate(id: string) {
     return this.client.request<unknown>(`v7/operation/bookings/${id}/deactivation`, 'POST');
+  }
+}
+
+class VesselDetailsReportClient {
+  constructor(private client: VintraceClient) {}
+
+  get(params?: VesselDetailsReportParams): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/report/vessel-details-report', 'GET', {}, params);
   }
 }
 

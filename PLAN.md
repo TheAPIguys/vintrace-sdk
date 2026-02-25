@@ -158,6 +158,15 @@ All errors expose: `message`, `status`, `correlationId`, `name`.
 | 13 | WorkOrders | getAll | not started |
 | 14 | Tirage | get, patch | not started |
 | 15 | BarrelsMovements | post | not started |
+| 16 | VesselDetailsReport | get | done |
+
+---
+
+## v7 Report Endpoints (In YAML Order)
+
+| # | Module | Methods | Status |
+|---|--------|---------|--------|
+| 1 | VesselDetailsReport | get | done |
 
 ---
 
