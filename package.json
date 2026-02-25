@@ -1,0 +1,45 @@
+{
+  "name": "vintrace-sdk",
+  "version": "0.0.1",
+  "description": "TypeScript SDK for Vintrace API. Note: This SDK is not affiliated with or endorsed by Vintrace in any way. It is an independent project created by a third-party developer to provide a convenient interface for interacting with the Vintrace API. Use at your own risk and always refer to the official Vintrace API documentation for the most accurate and up-to-date information. This SDK is provided as-is without any warranties or guarantees. The developer is not responsible for any issues, bugs, or data loss that may occur from using this SDK. Always test thoroughly in a safe environment before using it in production. This SDK is in beta and may have breaking changes in future releases. Contributions and feedback are welcome to help improve the SDK.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "generate-types": "openapi-typescript vintrace-api-v7-combined.yaml -o src/types/generated.ts",
+    "test": "vitest",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint": "^10.0.2",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.8.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

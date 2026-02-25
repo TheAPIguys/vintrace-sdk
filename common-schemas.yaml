@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: Common Schemas
+  version: 1.0.0
+components:
+  parameters:
+    CorrelationId:
+      name: correlation-id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    PaginationLimit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 50
+    PaginationOffset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    VintraceEntityIds:
+      name: ids
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Comma-separated entity IDs
+    VintraceEntityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    IdentifiableEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+    ExtIdentifiableEntity:
+      allOf:
+        - $ref: '#/components/schemas/IdentifiableEntity'
+        - type: object
+          properties:
+            extId:
+              type: string
+    CodedIdentifiableEntity:
+      allOf:
+        - $ref: '#/components/schemas/IdentifiableEntity'
+        - type: object
+          properties:
+            code:
+              type: string
+    Winery:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        businessUnit:
+          type: string
+    Measurement:
+      type: object
+      properties:
+        value:
+          type: number
+        unit:
+          type: string
+    CostBreakdown:
+      type: object
+      properties:
+        total:
+          type: number
+        fruit:
+          type: number
+        overhead:
+          type: number
+        storage:
+          type: number
+        additive:
+          type: number
+        bulk:
+          type: number
+        packaging:
+          type: number
+        operation:
+          type: number
+        freight:
+          type: number
+        other:
+          type: number
+    PatchRequest:
+      type: array
+      items:
+        type: object
+        properties:
+          path:
+            type: string
+          op:
+            type: string
+            enum: [REPLACE, ADD, REMOVE]
+          value:
+            type: object
+    Shared-openapi_PageRoot:
+      type: object
+      properties:
+        totalResults:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+        first:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        next:
+          type: string
+          nullable: true
+        last:
+          type: string
+          nullable: true
+    Grading:
+      type: object
+      properties:
+        scaleId:
+          type: integer
+        scaleName:
+          type: string
+        valueId:
+          type: integer
+        valueName:
+          type: string
+    AnalysisResult:
+      type: object
+      properties:
+        name:
+          type: string
+        interfaceMappedName:
+          type: string
+          nullable: true
+        value:
+          type: number
+          nullable: true
+        nonNumericValue:
+          type: string
+          nullable: true
+    AllocationSlice:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/ExtIdentifiableEntity'
+        vintage:
+          type: integer
+        itemCode:
+          type: string
+        allocationVolume:
+          $ref: '#/components/schemas/Measurement'
+        allocationPercentageOfVessel:
+          type: number

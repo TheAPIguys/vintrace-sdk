@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Common Responses
+  version: 1.0.0
+components:
+  responses:
+    DefaultError:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
