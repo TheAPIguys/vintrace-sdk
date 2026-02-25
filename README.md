@@ -3,6 +3,8 @@
 A TypeScript SDK for the Vintrace API.
 
 > **Disclaimer**: This SDK is not affiliated with or endorsed by Vintrace. It is an independent, third-party project. Use at your own risk. Always refer to the official Vintrace API documentation. Provided as-is without warranties. Test thoroughly before using in production.
+>
+> **GitHub**: https://github.com/anomalyco/vintrace-sdk
 
 ---
 
@@ -193,23 +195,26 @@ type VintraceResult<T> =
 
 ### v7 Endpoints
 
-| Module | Methods |
-|--------|---------|
-| Costs | `businessUnitTransactions` |
-| Blocks | `getAll`, `get`, `post`, `update`, `patch`, `getAssessments`, `createAssessment` |
-| Assessments | `getAll` |
-| Vineyards | `post` |
-| MaturitySamples | `post` |
-| Parties | `getAll`, `post` |
-| Shipments | `getAll` |
-| BarrelTreatments | `getAll` |
-| Bookings | `post`, `deactivate` |
-| FruitIntakes | `post`, `updatePricing`, `updateMetrics` |
-| BulkIntakes | `getAll`, `post`, `patch` |
-| TrialBlends | `getAll` |
-| WorkOrders | `getAll` |
-| Tirage | `get`, `patch` |
-| BarrelsMovements | `post` |
+> **Note**: v7 is still under development. Only a subset of endpoints are currently implemented. More coming soon.
+
+| Module | Status | Methods |
+|--------|--------|---------|
+| Blocks | Partial | `getAll`, `get`, `post`, `patch` |
+| Bookings | Ready | `post`, `deactivate` |
+| VesselDetailsReport | Ready | `get` |
+| Costs | Not started | `businessUnitTransactions` |
+| Assessments | Not started | `getAll` |
+| Vineyards | Not started | `post` |
+| MaturitySamples | Not started | `post` |
+| Parties | Not started | `getAll`, `post` |
+| Shipments | Not started | `getAll` |
+| BarrelTreatments | Not started | `getAll` |
+| FruitIntakes | Not started | `post`, `updatePricing`, `updateMetrics` |
+| BulkIntakes | Not started | `getAll`, `post`, `patch` |
+| TrialBlends | Not started | `getAll` |
+| WorkOrders | Not started | `getAll` |
+| Tirage | Not started | `get`, `patch` |
+| BarrelsMovements | Not started | `post` |
 
 ---
 
