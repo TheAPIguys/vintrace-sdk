@@ -25,12 +25,12 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('v6.salesOrders', () => {
   describe('getAll()', () => {
-    it('calls GET v6/sales-order/list and returns response', async () => {
+    it('calls GET v6/sales-order/list and returns all sales orders', async () => {
       stubFetch(200, salesOrderResponse);
       const client = makeClient();
       const [data, error] = await client.v6.salesOrders.getAll();
       expect(error).toBeNull();
-      expect(data).toEqual(salesOrderResponse);
+      expect(data).toEqual(salesOrderResponse.salesOrders);
     });
 
     it('passes query params to the request', async () => {

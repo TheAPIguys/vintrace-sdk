@@ -125,6 +125,11 @@ export const ProductResponseSchema = z.object({
 export const ProductListResponseSchema = z.object({
   status: z.string().optional(),
   products: ProductSchema.array().optional(),
+  totalResultCount: z.number().optional(),
+  firstResult: z.number().optional(),
+  maxResult: z.number().optional(),
+  nextURLPath: z.string().nullable().optional(),
+  prevURLPath: z.string().nullable().optional(),
 });
 
 export const ProductUpdateFieldSchema = z.object({
@@ -227,6 +232,11 @@ export const SalesOrderResponseSchema = z.object({
   status: z.string(),
   message: z.string().nullable(),
   salesOrders: SalesOrderSchema.array(),
+  totalResultCount: z.number().optional(),
+  firstResult: z.number().optional(),
+  maxResult: z.number().optional(),
+  nextURLPath: z.string().nullable().optional(),
+  prevURLPath: z.string().nullable().optional(),
 });
 
 export const SalesOrderUpdateResponseSchema = z.object({
@@ -273,6 +283,11 @@ export const RefundResponseSchema = z.object({
   status: z.string(),
   message: z.string().nullable(),
   refunds: RefundSchema.array(),
+  totalResultCount: z.number().optional(),
+  firstResult: z.number().optional(),
+  maxResult: z.number().optional(),
+  nextURLPath: z.string().nullable().optional(),
+  prevURLPath: z.string().nullable().optional(),
 });
 
 export const RefundUpdateResponseSchema = z.object({
@@ -295,6 +310,11 @@ export const PartyResponseSchema = z.object({
   status: z.string(),
   message: z.string().nullable(),
   parties: PartySchema.array(),
+  totalResultCount: z.number().optional(),
+  firstResult: z.number().optional(),
+  maxResult: z.number().optional(),
+  nextURLPath: z.string().nullable().optional(),
+  prevURLPath: z.string().nullable().optional(),
 });
 
 export const WorkOrderJobDetailSchema = z.object({
@@ -383,12 +403,20 @@ export const PartyUpdateResponseSchema = z.object({
   party: PartySchema.optional(),
 });
 
+// Partial write schemas — used for request validation on create/update methods
+// where callers supply Partial<T> rather than the full entity shape.
+export const SalesOrderWriteSchema = SalesOrderSchema.partial();
+export const RefundWriteSchema = RefundSchema.partial();
+export const PartyWriteSchema = PartySchema.partial();
+
 export const TransactionSearchParamsSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   ownerName: z.string().optional(),
   batchName: z.string().optional(),
   wineryName: z.string().optional(),
+  maxResults: z.number().optional(),
+  firstResult: z.number().optional(),
 });
 
 export const IntakeOperationSearchParamsSchema = z.object({
@@ -457,6 +485,7 @@ export const SearchListParamsSchema = z.object({
   first: z.string().optional(),
   startsWith: z.string().optional(),
   exactMatch: z.boolean().optional(),
+  max: z.string().optional(),
 });
 
 export const MrpStockHistoryParamsSchema = z.object({
@@ -587,3 +616,65 @@ export type ProductAnalysisResponse = z.infer<typeof ProductAnalysisResponseSche
 export type ProductAnalysisParams = z.infer<typeof ProductAnalysisParamsSchema>;
 export type CompositionComponent = z.infer<typeof CompositionComponentSchema>;
 export type ProductCompositionResponse = z.infer<typeof ProductCompositionResponseSchema>;
+export type SalesOrderWrite = z.infer<typeof SalesOrderWriteSchema>;
+export type RefundWrite = z.infer<typeof RefundWriteSchema>;
+export type PartyWrite = z.infer<typeof PartyWriteSchema>;
+
+// ---------------------------------------------------------------------------
+// Generic Paginated Response Schemas (v7 style)
+// ---------------------------------------------------------------------------
+
+export const PaginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
+  z.object({
+    totalResults: z.number().optional(),
+    offset: z.number().optional(),
+    limit: z.number().optional(),
+    first: z.string().nullable().optional(),
+    previous: z.string().nullable().optional(),
+    next: z.string().nullable().optional(),
+    last: z.string().nullable().optional(),
+    results: z.array(itemSchema).optional(),
+  });
+
+export const BlockDataSchema = z.object({
+  id: z.number(),
+  code: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  extId: z.string().optional(),
+  inactive: z.boolean().optional(),
+});
+
+export const GetBlocksSuccessResponseSchema = PaginatedResponseSchema(BlockDataSchema);
+
+// ---------------------------------------------------------------------------
+// v6-style paginated responses: totalResultCount + first/max params
+// ---------------------------------------------------------------------------
+
+export const V6PaginatedResponseSchema = z.object({
+  totalResultCount: z.number().optional(),
+  firstResult: z.number().optional(),
+  maxResult: z.number().optional(),
+  nextURLPath: z.string().nullable().optional(),
+  prevURLPath: z.string().nullable().optional(),
+  results: z.array(z.unknown()).optional(),
+});
+
+export const InventoryResponseSchema = V6PaginatedResponseSchema;
+export const TransactionSearchResponseSchema = V6PaginatedResponseSchema;
+export const IntakeOperationSearchResponseSchema = V6PaginatedResponseSchema;
+export const SampleOperationSearchResponseSchema = V6PaginatedResponseSchema;
+export const SearchListResponseSchema = V6PaginatedResponseSchema;
+
+// ---------------------------------------------------------------------------
+// Type exports for new schemas
+// ---------------------------------------------------------------------------
+
+export type GetBlocksSuccessResponse = z.infer<typeof GetBlocksSuccessResponseSchema>;
+export type BlockData = z.infer<typeof BlockDataSchema>;
+export type InventoryResponse = z.infer<typeof InventoryResponseSchema>;
+export type TransactionSearchResponse = z.infer<typeof TransactionSearchResponseSchema>;
+export type IntakeOperationSearchResponse = z.infer<typeof IntakeOperationSearchResponseSchema>;
+export type SampleOperationSearchResponse = z.infer<typeof SampleOperationSearchResponseSchema>;
+export type SearchListResponse = z.infer<typeof SearchListResponseSchema>;
+export type V6PaginatedResponse = z.infer<typeof V6PaginatedResponseSchema>;

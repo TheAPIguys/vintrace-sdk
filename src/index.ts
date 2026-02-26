@@ -19,6 +19,9 @@ export {
   RefundListParams,
   PartyListParams,
   ProductListParams,
+  VesselDetailsReportParams,
+} from './client/VintraceClient';
+export type {
   TransactionSearchParams,
   IntakeOperationSearchParams,
   SampleOperationSearchParams,
@@ -26,9 +29,6 @@ export {
   SearchListParams,
   MrpStockHistoryParams,
   MrpStockNotesParams,
-  VesselDetailsReportParams,
-} from './client/VintraceClient';
-export type {
   ProductAnalysisResponse,
   ProductAnalysisParams,
   ProductCompositionResponse,

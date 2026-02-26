@@ -25,12 +25,12 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('v6.parties', () => {
   describe('getAll()', () => {
-    it('calls GET v6/party/list and returns response', async () => {
+    it('calls GET v6/party/list and returns all parties', async () => {
       stubFetch(200, partyResponse);
       const client = makeClient();
       const [data, error] = await client.v6.parties.getAll();
       expect(error).toBeNull();
-      expect(data).toEqual(partyResponse);
+      expect(data).toEqual(partyResponse.parties);
     });
 
     it('passes query params to the request', async () => {
