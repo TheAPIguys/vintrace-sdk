@@ -858,3 +858,440 @@ export type ProductJobAttachment = z.infer<typeof ProductJobAttachmentSchema>;
 export type ProductJob = z.infer<typeof ProductJobSchema>;
 export type ProductJobDetails = z.infer<typeof ProductJobDetailsSchema>;
 export type ProductJobResponse = z.infer<typeof ProductJobResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Costs - Business Unit Transactions
+// ---------------------------------------------------------------------------
+
+export const TransactionDetailsSchema = z.object({
+  activityDate: z.number().optional(),
+  postedDate: z.number().optional(),
+  resultOfCorrection: z.boolean().optional(),
+  activityId: z.string().optional(),
+  postedId: z.number().optional(),
+  activityType: z.string().optional(),
+  activitySummary: z.string().optional(),
+  primaryCostTarget: z.string().optional(),
+  secondaryCostTarget: z.string().optional(),
+  primaryWinery: WinerySchema.optional(),
+  secondaryWinery: WinerySchema.optional(),
+  location: z.string().optional(),
+  vessel: z.string().optional(),
+  wineBatch: z.string().optional(),
+  productCategory: CodedIdentifiableEntitySchema.optional(),
+  program: CodedIdentifiableEntitySchema.optional(),
+  volumeDelta: MeasurementSchema.optional(),
+  costDelta: CostBreakdownSchema.optional(),
+  otherWinery: WinerySchema.optional(),
+  notes: z.string().optional(),
+  customer: ExtIdentifiableEntitySchema.optional(),
+  vendor: ExtIdentifiableEntitySchema.optional(),
+  lossReason: IdentifiableEntitySchema.optional(),
+  allocationDescription: z.string().optional(),
+  impactedAllocations: z
+    .array(
+      z.object({
+        productName: z.string().optional(),
+        vintage: z.string().optional(),
+        itemCode: z.string().optional(),
+        name: z.string().optional(),
+      })
+    )
+    .optional(),
+  references: z
+    .object({
+      bulkSalesOrder: z.string().optional(),
+      bulkPurchaseOrder: z.string().optional(),
+      externalWorkOrder: z.string().optional(),
+      workOrder: z.string().optional(),
+      jobNUmber: z.string().optional(),
+      billOfLadingNumber: z.string().optional(),
+    })
+    .optional(),
+});
+
+export const GetBusinessUnitTransactionsResponseSchema =
+  PaginatedResponseSchema(TransactionDetailsSchema);
+
+export type TransactionDetails = z.infer<typeof TransactionDetailsSchema>;
+export type GetBusinessUnitTransactionsResponse = z.infer<
+  typeof GetBusinessUnitTransactionsResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// Block Assessments
+// ---------------------------------------------------------------------------
+
+export const BlockAssessmentOverviewSchema = z.object({
+  id: z.number().optional(),
+  blockId: z.number().optional(),
+  assessmentDate: z.number().optional(),
+  assessmentDateAsText: z.string().optional(),
+  vintage: z.string().optional(),
+  grade: z.string().optional(),
+  score: z.number().optional(),
+  brix: z.number().optional(),
+  ph: z.number().optional(),
+  ta: z.number().optional(),
+  ba: z.number().optional(),
+  principalMethod: z.string().optional(),
+  secondaryMethod: z.string().optional(),
+  clone: z.string().optional(),
+  region: z.string().optional(),
+  subRegion: z.string().optional(),
+  vineyard: z.string().optional(),
+  blockCode: z.string().optional(),
+  blockName: z.string().optional(),
+  variety: z.string().optional(),
+});
+
+export const GetAssessmentsResponseSchema = PaginatedResponseSchema(BlockAssessmentOverviewSchema);
+
+export type BlockAssessmentOverview = z.infer<typeof BlockAssessmentOverviewSchema>;
+export type GetAssessmentsResponse = z.infer<typeof GetAssessmentsResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Vineyards
+// ---------------------------------------------------------------------------
+
+export const VineyardSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  grower: ExtIdentifiableEntitySchema.optional(),
+});
+
+export const VineyardResponseSchema = z.object({
+  data: VineyardSchema.optional(),
+});
+
+export type Vineyard = z.infer<typeof VineyardSchema>;
+export type VineyardResponse = z.infer<typeof VineyardResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Maturity Samples
+// ---------------------------------------------------------------------------
+
+export const MaturitySampleSchema = z.object({
+  id: z.number().optional(),
+  sampleDate: z.number().optional(),
+  sampleDateAsText: z.string().optional(),
+  vineyard: z.string().optional(),
+  block: z.string().optional(),
+  varietal: z.string().optional(),
+  vintage: z.string().optional(),
+  brix: z.number().optional(),
+  ph: z.number().optional(),
+  ta: z.number().optional(),
+  grade: z.string().optional(),
+});
+
+export const MaturitySampleResponseSchema = z.object({
+  data: MaturitySampleSchema.optional(),
+});
+
+export type MaturitySample = z.infer<typeof MaturitySampleSchema>;
+export type MaturitySampleResponse = z.infer<typeof MaturitySampleResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Parties (v7 /identity/parties)
+// ---------------------------------------------------------------------------
+
+export const PartyV7Schema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  primeName: z.string().optional(),
+  givenName: z.string().nullable(),
+  phone: z.string().nullable(),
+  email: z.string().nullable(),
+  isOrganization: z.boolean().optional(),
+  address: AddressSchema.optional(),
+});
+
+export const GetPartiesV7ResponseSchema = PaginatedResponseSchema(PartyV7Schema);
+
+export type PartyV7 = z.infer<typeof PartyV7Schema>;
+export type GetPartiesV7Response = z.infer<typeof GetPartiesV7ResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Shipments
+// ---------------------------------------------------------------------------
+
+export const ShipmentDestinationSchema = z.object({
+  name: z.string().optional(),
+  address: AddressSchema.optional(),
+});
+
+export const ShipmentWineDetailsSchema = z.object({
+  productId: z.number().optional(),
+  productName: z.string().optional(),
+  quantity: z.number().optional(),
+  volume: MeasurementSchema.optional(),
+});
+
+export const ShipmentDataSchema = z.object({
+  id: z.number().optional(),
+  code: z.string().optional(),
+  shipmentDate: z.number().optional(),
+  shipmentDateAsText: z.string().optional(),
+  status: z.string().optional(),
+  destination: ShipmentDestinationSchema.optional(),
+  wineDetails: ShipmentWineDetailsSchema.array().optional(),
+});
+
+export const GetShipmentsSuccessResponseSchema = PaginatedResponseSchema(ShipmentDataSchema);
+
+export type ShipmentDestination = z.infer<typeof ShipmentDestinationSchema>;
+export type ShipmentWineDetails = z.infer<typeof ShipmentWineDetailsSchema>;
+export type ShipmentData = z.infer<typeof ShipmentDataSchema>;
+export type GetShipmentsSuccessResponse = z.infer<typeof GetShipmentsSuccessResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Barrel Treatments
+// ---------------------------------------------------------------------------
+
+export const BarrelTreatmentTypeSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  code: z.string().optional(),
+});
+
+export const ShipmentBarrelDetailsSchema = z.object({
+  barcode: z.string().optional(),
+  vendorBarcode: z.string().optional(),
+  quantity: z.number().optional(),
+});
+
+export const BarrelTreatmentDataSchema = z.object({
+  id: z.number().optional(),
+  treatmentDate: z.number().optional(),
+  treatmentDateAsText: z.string().optional(),
+  treatment: BarrelTreatmentTypeSchema.optional(),
+  barrels: ShipmentBarrelDetailsSchema.array().optional(),
+});
+
+export const GetBarrelTreatmentsSuccessResponseSchema =
+  PaginatedResponseSchema(BarrelTreatmentDataSchema);
+
+export type BarrelTreatmentType = z.infer<typeof BarrelTreatmentTypeSchema>;
+export type ShipmentBarrelDetails = z.infer<typeof ShipmentBarrelDetailsSchema>;
+export type BarrelTreatmentData = z.infer<typeof BarrelTreatmentDataSchema>;
+export type GetBarrelTreatmentsSuccessResponse = z.infer<
+  typeof GetBarrelTreatmentsSuccessResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// Fruit Intakes
+// ---------------------------------------------------------------------------
+
+export const FruitIntakeSchema = z.object({
+  id: z.number().optional(),
+  intakeDate: z.number().optional(),
+  intakeDateAsText: z.string().optional(),
+  deliveryDocket: z.string().optional(),
+  intakeDocket: z.string().optional(),
+  brix: z.number().optional(),
+  ph: z.number().optional(),
+  ta: z.number().optional(),
+  weight: MeasurementSchema.optional(),
+  volume: MeasurementSchema.optional(),
+  block: z.string().optional(),
+  vineyard: z.string().optional(),
+  varietal: z.string().optional(),
+  vintage: z.string().optional(),
+  grower: z.string().optional(),
+  owner: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export const FruitIntakeRequestSchema = FruitIntakeSchema.partial();
+
+export const CreateFruitIntakeSuccessResponseSchema = z.object({
+  data: FruitIntakeSchema.optional(),
+});
+
+export const UpdateFruitIntakePricingSchema = z.object({
+  pricePerTon: z.number().optional(),
+  pricePerKg: z.number().optional(),
+  bypassed: z.boolean().optional(),
+});
+
+export const UpdateFruitIntakePricingResponseSchema = z.object({
+  data: UpdateFruitIntakePricingSchema.optional(),
+});
+
+export type FruitIntake = z.infer<typeof FruitIntakeSchema>;
+export type FruitIntakeRequest = z.infer<typeof FruitIntakeRequestSchema>;
+export type CreateFruitIntakeSuccessResponse = z.infer<
+  typeof CreateFruitIntakeSuccessResponseSchema
+>;
+export type UpdateFruitIntakePricing = z.infer<typeof UpdateFruitIntakePricingSchema>;
+export type UpdateFruitIntakePricingResponse = z.infer<
+  typeof UpdateFruitIntakePricingResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// Bulk Intakes
+// ---------------------------------------------------------------------------
+
+export const BulkIntakeSchema = z.object({
+  id: z.number().optional(),
+  code: z.string().optional(),
+  intakeDate: z.number().optional(),
+  intakeDateAsText: z.string().optional(),
+  supplier: z.string().optional(),
+  vintage: z.string().optional(),
+  varietal: z.string().optional(),
+  volume: MeasurementSchema.optional(),
+  status: z.string().optional(),
+});
+
+export const GetBulkIntakesSuccessResponseSchema = PaginatedResponseSchema(BulkIntakeSchema);
+
+export type BulkIntake = z.infer<typeof BulkIntakeSchema>;
+export type GetBulkIntakesSuccessResponse = z.infer<typeof GetBulkIntakesSuccessResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Trial Blends
+// ---------------------------------------------------------------------------
+
+export const TrialBlendSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  status: z.string().optional(),
+  createdDate: z.number().optional(),
+  createdDateAsText: z.string().optional(),
+  targetVolume: MeasurementSchema.optional(),
+  actualVolume: MeasurementSchema.optional(),
+  components: z
+    .array(
+      z.object({
+        productId: z.number().optional(),
+        productName: z.string().optional(),
+        percentage: z.number().optional(),
+        volume: MeasurementSchema.optional(),
+      })
+    )
+    .optional(),
+});
+
+export const GetTrialBlendsSuccessResponseSchema = PaginatedResponseSchema(TrialBlendSchema);
+
+export type TrialBlend = z.infer<typeof TrialBlendSchema>;
+export type GetTrialBlendsSuccessResponse = z.infer<typeof GetTrialBlendsSuccessResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Work Orders (v7)
+// ---------------------------------------------------------------------------
+
+export const WorkOrderV7Schema = z.object({
+  id: z.number().optional(),
+  code: z.string().optional(),
+  name: z.string().optional(),
+  status: z.string().optional(),
+  scheduledDate: z.number().optional(),
+  scheduledDateAsText: z.string().optional(),
+  assignedTo: z.string().optional(),
+  summary: z.string().optional(),
+});
+
+export const GetWorkOrdersV7ResponseSchema = PaginatedResponseSchema(WorkOrderV7Schema);
+
+export type WorkOrderV7 = z.infer<typeof WorkOrderV7Schema>;
+export type GetWorkOrdersV7Response = z.infer<typeof GetWorkOrdersV7ResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Tirage
+// ---------------------------------------------------------------------------
+
+export const TirageSourceWineDetailsSchema = z.object({
+  productId: z.number().optional(),
+  productName: z.string().optional(),
+  volume: MeasurementSchema.optional(),
+  vintage: z.string().optional(),
+});
+
+export const TiragePackageDetailsSchema = z.object({
+  packageType: z.string().optional(),
+  quantity: z.number().optional(),
+  volume: MeasurementSchema.optional(),
+});
+
+export const TirageSchema = z.object({
+  id: z.number().optional(),
+  operationId: z.number().optional(),
+  status: z.string().optional(),
+  sourceWine: TirageSourceWineDetailsSchema.optional(),
+  package: TiragePackageDetailsSchema.optional(),
+  jobNumber: z.string().optional(),
+  createdDate: z.number().optional(),
+  createdDateAsText: z.string().optional(),
+});
+
+export const TirageSuccessResponseSchema = z.object({
+  data: TirageSchema.optional(),
+});
+
+export type TirageSourceWineDetails = z.infer<typeof TirageSourceWineDetailsSchema>;
+export type TiragePackageDetails = z.infer<typeof TiragePackageDetailsSchema>;
+export type Tirage = z.infer<typeof TirageSchema>;
+export type TirageSuccessResponse = z.infer<typeof TirageSuccessResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Barrels Movements
+// ---------------------------------------------------------------------------
+
+export const BarrelsMovementSchema = z.object({
+  id: z.number().optional(),
+  movementDate: z.number().optional(),
+  movementDateAsText: z.string().optional(),
+  fromLocation: z.string().optional(),
+  toLocation: z.string().optional(),
+  barrels: z.array(z.string()).optional(),
+  status: z.string().optional(),
+});
+
+export const CreateBarrelsMovementRequestSchema = z.object({
+  movementDate: z.number().optional(),
+  fromLocation: z.string().optional(),
+  toLocation: z.string().optional(),
+  barrels: z.array(z.string()).optional(),
+});
+
+export type BarrelsMovement = z.infer<typeof BarrelsMovementSchema>;
+export type CreateBarrelsMovementRequest = z.infer<typeof CreateBarrelsMovementRequestSchema>;
+
+// ---------------------------------------------------------------------------
+// Bookings (v7)
+// ---------------------------------------------------------------------------
+
+export const BookingStateSchema = z.enum(['Scheduled', 'Underway', 'Completed', 'Confirmed']);
+
+export const BookingSchema = z.object({
+  id: z.number().optional(),
+  code: z.string().optional(),
+  bookingDate: z.number().optional(),
+  bookingDateAsText: z.string().optional(),
+  bookingState: BookingStateSchema.optional(),
+  bookingType: z.string().optional(),
+  startTime: z.number().optional(),
+  startTimeAsText: z.string().optional(),
+  endTime: z.number().optional(),
+  endTimeAsText: z.string().optional(),
+  winery: WinerySchema.optional(),
+  bulkBooking: z.boolean().optional(),
+  lastBooking: z.boolean().optional(),
+});
+
+export const CreateBookingSuccessResponseSchema = z.object({
+  data: BookingSchema.optional(),
+});
+
+export const BookingDeactivationResponseSchema = z.object({
+  status: z.string().optional(),
+  message: z.string().optional(),
+});
+
+export type BookingState = z.infer<typeof BookingStateSchema>;
+export type Booking = z.infer<typeof BookingSchema>;
+export type CreateBookingSuccessResponse = z.infer<typeof CreateBookingSuccessResponseSchema>;
+export type BookingDeactivationResponse = z.infer<typeof BookingDeactivationResponseSchema>;

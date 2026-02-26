@@ -24,6 +24,7 @@ export {
   PartyListParams,
   ProductListParams,
   VesselDetailsReportParams,
+  CostsBusinessUnitTransactionsParams,
 } from './client/VintraceClient';
 export type {
   TransactionSearchParams,

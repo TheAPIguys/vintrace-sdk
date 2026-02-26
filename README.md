@@ -195,26 +195,24 @@ type VintraceResult<T> =
 
 ### v7 Endpoints
 
-> **Note**: v7 is still under development. Only a subset of endpoints are currently implemented. More coming soon.
-
 | Module | Status | Methods |
 |--------|--------|---------|
+| Costs | Ready | `businessUnitTransactions` |
 | Blocks | Partial | `getAll`, `get`, `post`, `patch` |
+| Assessments | Ready | `getAll` |
+| Vineyards | Ready | `post` |
+| MaturitySamples | Ready | `post` |
+| Parties (v7) | Ready | `getAll`, `post` |
+| Shipments | Ready | `getAll` |
+| BarrelTreatments | Ready | `getAll` |
 | Bookings | Ready | `post`, `deactivate` |
+| FruitIntakes | Ready | `post`, `updatePricing`, `updateMetrics` |
+| BulkIntakes | Ready | `getAll`, `post`, `patch` |
+| TrialBlends | Ready | `getAll` |
+| WorkOrders (v7) | Ready | `getAll` |
+| Tirage | Ready | `get`, `patch` |
+| BarrelsMovements | Ready | `post` |
 | VesselDetailsReport | Ready | `get` |
-| Costs | Not started | `businessUnitTransactions` |
-| Assessments | Not started | `getAll` |
-| Vineyards | Not started | `post` |
-| MaturitySamples | Not started | `post` |
-| Parties | Not started | `getAll`, `post` |
-| Shipments | Not started | `getAll` |
-| BarrelTreatments | Not started | `getAll` |
-| FruitIntakes | Not started | `post`, `updatePricing`, `updateMetrics` |
-| BulkIntakes | Not started | `getAll`, `post`, `patch` |
-| TrialBlends | Not started | `getAll` |
-| WorkOrders | Not started | `getAll` |
-| Tirage | Not started | `get`, `patch` |
-| BarrelsMovements | Not started | `post` |
 
 ---
 

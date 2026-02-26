@@ -143,22 +143,22 @@ All errors expose: `message`, `status`, `correlationId`, `name`.
 
 | # | Module | Methods | Status |
 |---|--------|---------|--------|
-| 1 | Costs | businessUnitTransactions (GET) | not started |
+| 1 | Costs | businessUnitTransactions (GET) | ✅ done |
 | 2 | Blocks | getAll, get, post, update, patch, getAssessments, createAssessment | stub only |
-| 3 | Assessments | getAll | not started |
-| 4 | Vineyards | post | not started |
-| 5 | MaturitySamples | post | not started |
-| 6 | Parties | getAll, post (upsert) | not started |
-| 7 | Shipments | getAll | not started |
-| 8 | BarrelTreatments | getAll | not started |
-| 9 | Bookings | post, deactivate | stub only |
-| 10 | FruitIntakes | post, updatePricing, updateMetrics | not started |
-| 11 | BulkIntakes | getAll, post, patch | not started |
-| 12 | TrialBlends | getAll | not started |
-| 13 | WorkOrders | getAll | not started |
-| 14 | Tirage | get, patch | not started |
-| 15 | BarrelsMovements | post | not started |
-| 16 | VesselDetailsReport | get | done |
+| 3 | Assessments | getAll | ✅ done |
+| 4 | Vineyards | post | ✅ done |
+| 5 | MaturitySamples | post | ✅ done |
+| 6 | Parties | getAll, post (upsert) | ✅ done |
+| 7 | Shipments | getAll | ✅ done |
+| 8 | BarrelTreatments | getAll | ✅ done |
+| 9 | Bookings | post, deactivate | ✅ done |
+| 10 | FruitIntakes | post, updatePricing, updateMetrics | ✅ done |
+| 11 | BulkIntakes | getAll, post, patch | ✅ done |
+| 12 | TrialBlends | getAll | ✅ done |
+| 13 | WorkOrders | getAll | ✅ done |
+| 14 | Tirage | get, patch | ✅ done |
+| 15 | BarrelsMovements | post | ✅ done |
+| 16 | VesselDetailsReport | get | ✅ done |
 
 ---
 
@@ -299,24 +299,25 @@ These should be done before implementing any further API modules:
 - Search
 
 **v7 modules** (in YAML order):
-- Costs
-- Blocks — full types + Zod schemas + result pattern (currently stub only)
-- Assessments
-- Vineyards
-- MaturitySamples
-- Parties
-- Shipments
-- BarrelTreatments
-- Bookings — full types + Zod schemas + result pattern (currently stub only)
-- FruitIntakes
-- BulkIntakes
-- TrialBlends
-- WorkOrders
-- Tirage
-- BarrelsMovements
+- Costs — ✅ done
+- Blocks — stub only
+- Assessments — ✅ done
+- Vineyards — ✅ done
+- MaturitySamples — ✅ done
+- Parties (v7) — ✅ done
+- Shipments — ✅ done
+- BarrelTreatments — ✅ done
+- Bookings — ✅ done
+- FruitIntakes — ✅ done
+- BulkIntakes — ✅ done
+- TrialBlends — ✅ done
+- WorkOrders (v7) — ✅ done
+- Tirage — ✅ done
+- BarrelsMovements — ✅ done
 
 **Testing:**
-- No tests written yet
+- Unit tests for all v7 endpoints ✅
+- Integration tests for v6 endpoints ✅
 - Need Vitest unit tests and integration tests using Stoplight mock server
 - Mock server base URL: `https://stoplight.io/mocks/vintrace/vintrace-server/143865648`
 - Store fixtures in `tests/fixtures/`
