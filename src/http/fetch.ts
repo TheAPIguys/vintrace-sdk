@@ -80,7 +80,11 @@ export async function vintraceFetch<T = unknown>(
   };
 
   if (options.validateRequest && options.requestSchema && body) {
-    const [validatedBody, requestError] = validateRequest(options.requestSchema, body, correlationId);
+    const [validatedBody, requestError] = validateRequest(
+      options.requestSchema,
+      body,
+      correlationId
+    );
     if (requestError) {
       return [null, requestError];
     }

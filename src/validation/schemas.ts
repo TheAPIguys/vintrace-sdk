@@ -29,7 +29,14 @@ export const WorkOrderJobSchema = z.object({
   type: z.enum(['WINERY', 'MRP']).optional(),
   jobNumber: z.number().optional(),
   status: z
-    .enum(['INCOMPLETE', 'ASSIGNED', 'COMPLETED', 'ROLLBACK_REPLAY', 'IN_PROGRESS', 'PENDING_APPROVAL'])
+    .enum([
+      'INCOMPLETE',
+      'ASSIGNED',
+      'COMPLETED',
+      'ROLLBACK_REPLAY',
+      'IN_PROGRESS',
+      'PENDING_APPROVAL',
+    ])
     .optional(),
   scheduledTime: z.number().optional(),
   finishedTime: z.number().optional(),
@@ -677,4 +684,137 @@ export type TransactionSearchResponse = z.infer<typeof TransactionSearchResponse
 export type IntakeOperationSearchResponse = z.infer<typeof IntakeOperationSearchResponseSchema>;
 export type SampleOperationSearchResponse = z.infer<typeof SampleOperationSearchResponseSchema>;
 export type SearchListResponse = z.infer<typeof SearchListResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Vessel Details Report
+// ---------------------------------------------------------------------------
+
+const MeasurementSchema = z.object({
+  value: z.number().optional(),
+  unit: z.string().optional(),
+});
+
+const WinerySchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  businessUnit: z.string().optional(),
+});
+
+const GradingSchema = z.object({
+  scaleId: z.number().optional(),
+  scaleName: z.string().optional(),
+  valueId: z.number().optional(),
+  valueName: z.string().optional(),
+});
+
+const WineBatchDetailsSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  vintage: z.string().optional(),
+  designatedRegion: CodedIdentifiableEntitySchema.optional(),
+  designatedSubRegion: CodedIdentifiableEntitySchema.optional(),
+  designatedVariety: CodedIdentifiableEntitySchema.optional(),
+  program: z.string().optional(),
+  productCategory: CodedIdentifiableEntitySchema.optional(),
+  designatedProduct: CodedIdentifiableEntitySchema.optional(),
+  grading: GradingSchema.optional(),
+});
+
+const ProductStateSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  expectedLossesPercentage: z.number().optional(),
+});
+
+const TaxDetailsSchema = z.object({
+  bond: IdentifiableEntitySchema.optional(),
+  name: z.string().optional(),
+  taxState: z.string().optional(),
+  taxClass: IdentifiableEntitySchema.optional(),
+  federalName: z.string().optional(),
+  stateName: z.string().optional(),
+});
+
+const AllocationSliceSchema = z.object({
+  product: CodedIdentifiableEntitySchema.optional(),
+  vintage: z.string().optional(),
+  itemCode: z.string().optional(),
+  allocationVolume: MeasurementSchema.optional(),
+  allocationPercentageOfVessel: z.number().optional(),
+});
+
+const CompositionSliceSchema = z.object({
+  vintage: z.string().optional(),
+  variety: CodedIdentifiableEntitySchema.optional(),
+  region: CodedIdentifiableEntitySchema.optional(),
+  subRegion: CodedIdentifiableEntitySchema.optional(),
+  weighting: z.number().optional(),
+  percentage: z.number().optional(),
+  componentVolume: MeasurementSchema.optional(),
+});
+
+const CostBreakdownSchema = z.object({
+  total: z.number().optional(),
+  fruit: z.number().optional(),
+  overhead: z.number().optional(),
+  storage: z.number().optional(),
+  additive: z.number().optional(),
+  bulk: z.number().optional(),
+  packaging: z.number().optional(),
+  operation: z.number().optional(),
+  freight: z.number().optional(),
+  other: z.number().optional(),
+});
+
+const LiveMetricSchema = z.object({
+  name: z.string().optional(),
+  value: z.number().optional(),
+  interfaceMappedName: z.string().optional(),
+});
+
+const SparklingInfoSchema = z.object({
+  state: z.string().optional(),
+});
+
+export const BulkWineDetailsSchema = z.object({
+  id: z.number().optional(),
+  productId: z.number().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  vesselType: z.string().optional(),
+  detailsAsAt: z.number().optional(),
+  sparklingInfo: SparklingInfoSchema.optional(),
+  beverageType: IdentifiableEntitySchema.optional(),
+  owner: ExtIdentifiableEntitySchema.optional(),
+  winery: WinerySchema.optional(),
+  wineBatch: WineBatchDetailsSchema.optional(),
+  productState: ProductStateSchema.optional(),
+  volume: MeasurementSchema.optional(),
+  capacity: MeasurementSchema.optional(),
+  ullage: MeasurementSchema.optional(),
+  ttbDetails: TaxDetailsSchema.optional(),
+  liveMetrics: z.array(LiveMetricSchema).optional(),
+  cost: CostBreakdownSchema.optional(),
+  composition: z.array(CompositionSliceSchema).optional(),
+  allocations: z.array(AllocationSliceSchema).optional(),
+  unallocatedVolume: MeasurementSchema.optional(),
+  unallocatedPercentageOfVessel: z.number().optional(),
+});
+
+export const GetBulkWineDetailsReportResponseSchema = z.object({
+  totalResults: z.number().optional(),
+  offset: z.number().optional(),
+  limit: z.number().optional(),
+  first: z.string().nullable().optional(),
+  previous: z.string().nullable().optional(),
+  next: z.string().nullable().optional(),
+  last: z.string().nullable().optional(),
+  results: z.array(BulkWineDetailsSchema).optional(),
+});
+
+export type BulkWineDetails = z.infer<typeof BulkWineDetailsSchema>;
+export type GetBulkWineDetailsReportResponse = z.infer<
+  typeof GetBulkWineDetailsReportResponseSchema
+>;
 export type V6PaginatedResponse = z.infer<typeof V6PaginatedResponseSchema>;

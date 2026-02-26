@@ -3,7 +3,11 @@ import { VintraceError } from '../client/errors';
 import { VintraceResult } from '../types/result';
 
 export class VintraceValidationSchemaError extends VintraceError {
-  constructor(message: string, public readonly errors: ZodIssue[], correlationId?: string) {
+  constructor(
+    message: string,
+    public readonly errors: ZodIssue[],
+    correlationId?: string
+  ) {
     super(message, 422, correlationId);
     this.name = 'VintraceValidationSchemaError';
   }

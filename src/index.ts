@@ -12,7 +12,11 @@ export {
 export { paginate, batchGet, PaginatedResponse, PaginationOptions } from './http/pagination';
 export { vintraceFetch, RequestOptions, VintraceFetchError } from './http/fetch';
 export { VintraceResult } from './types/result';
-export { validateRequest, validateResponse, VintraceValidationSchemaError } from './validation/index';
+export {
+  validateRequest,
+  validateResponse,
+  VintraceValidationSchemaError,
+} from './validation/index';
 export {
   WorkOrderListParams,
   SalesOrderListParams,

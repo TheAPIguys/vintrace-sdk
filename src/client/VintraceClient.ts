@@ -38,6 +38,7 @@ import type {
   SearchListParams,
   MrpStockHistoryParams,
   MrpStockNotesParams,
+  GetBulkWineDetailsReportResponse,
 } from '../validation/schemas';
 import {
   WorkOrderSearchResponseSchema,
@@ -71,6 +72,7 @@ import {
   IntakeOperationSearchResponseSchema,
   SampleOperationSearchResponseSchema,
   SearchListResponseSchema,
+  GetBulkWineDetailsReportResponseSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -1149,8 +1151,15 @@ class VesselDetailsReportClient {
    *
    * Returns a vessel details report based on the provided parameters.
    */
-  get(params?: VesselDetailsReportParams): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>('v7/report/vessel-details-report', 'GET', {}, params);
+  get(
+    params?: VesselDetailsReportParams
+  ): Promise<VintraceResult<GetBulkWineDetailsReportResponse>> {
+    return this.client.request<GetBulkWineDetailsReportResponse>(
+      'v7/report/vessel-details-report',
+      'GET',
+      { responseSchema: GetBulkWineDetailsReportResponseSchema },
+      params
+    );
   }
 }
 
