@@ -2639,4 +2639,46 @@ class ProductJobsClient {
       responseSchema: ProductJobResponseSchema,
     });
   }
+
+  /**
+   * Get job history for multiple products by their numeric IDs.
+   * Respects the client's `parallelLimit` option (default 5 concurrent).
+   * Returns `VintraceAggregateError` if any individual request fails.
+   */
+  getAll(productIds: number[]): Promise<VintraceResult<ProductJobResponse[]>> {
+    return this.batchGet(productIds, (id) => this.get(id));
+  }
+
+  private async batchGet(
+    ids: number[],
+    fetchFn: (id: number) => Promise<VintraceResult<ProductJobResponse>>
+  ): Promise<VintraceResult<ProductJobResponse[]>> {
+    const limit = this.client.options.parallelLimit;
+    const errors: VintraceError[] = [];
+    const data: ProductJobResponse[] = [];
+
+    for (let i = 0; i < ids.length; i += limit) {
+      const chunk = ids.slice(i, i + limit);
+      const results = await Promise.allSettled(chunk.map((id) => fetchFn(id)));
+
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          const [item, error] = result.value;
+          if (error) {
+            errors.push(error);
+          } else if (item !== null) {
+            data.push(item);
+          }
+        } else {
+          errors.push(new VintraceError(result.reason?.message ?? 'Unknown error', 0));
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      return [null, new VintraceAggregateError(errors)];
+    }
+
+    return [data, null];
+  }
 }
