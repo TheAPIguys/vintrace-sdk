@@ -33,7 +33,7 @@ describe('VintraceClient v7 - vessel-details-report', () => {
       const client = makeClient();
       await client.v7.vesselDetailsReport.get();
       const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE_URL}/${ORG}/api/v7/report/vessel-details-report`);
+      expect(url).toContain(`${BASE_URL}/${ORG}/api/v7/report/vessel-details-report`);
     });
 
     it('passes query parameters correctly', async () => {
@@ -46,7 +46,10 @@ describe('VintraceClient v7 - vessel-details-report', () => {
         vesselType: 'TANK',
       };
       await client.v7.vesselDetailsReport.get(params);
-      const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+      const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [
+        string,
+        RequestInit,
+      ];
       expect(url).toContain('limit=10');
       expect(url).toContain('offset=0');
       expect(url).toContain('asAtDate=1650431615057');
@@ -77,11 +80,69 @@ describe('VintraceClient v7 - vessel-details-report', () => {
       expect(error).toBeNull();
     });
 
+    it('auto-paginates and returns aggregated results when totalResults exceeds limit', async () => {
+      const page1 = {
+        totalResults: 3,
+        offset: 0,
+        limit: 2,
+        results: [
+          { id: 1, name: 'Vessel 1', vesselType: 'TANK' },
+          { id: 2, name: 'Vessel 2', vesselType: 'TANK' },
+        ],
+      };
+      const page2 = {
+        totalResults: 3,
+        offset: 2,
+        limit: 2,
+        results: [{ id: 3, name: 'Vessel 3', vesselType: 'TANK' }],
+      };
+
+      const responseHeaders = new Headers({ 'content-type': 'application/json' });
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: responseHeaders,
+          json: vi.fn().mockResolvedValue(page1),
+          text: vi.fn().mockResolvedValue(JSON.stringify(page1)),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: responseHeaders,
+          json: vi.fn().mockResolvedValue(page2),
+          text: vi.fn().mockResolvedValue(JSON.stringify(page2)),
+        });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const client = makeClient({ parallelLimit: 2 });
+      const [data, error] = await client.v7.vesselDetailsReport.get({ limit: 2 });
+
+      expect(error).toBeNull();
+      expect(data?.results).toEqual([...(page1.results ?? []), ...(page2.results ?? [])]);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+
+      const [firstUrl] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const [secondUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
+      expect(firstUrl).toContain('limit=2');
+      expect(firstUrl).toContain('offset=0');
+      expect(secondUrl).toContain('limit=2');
+      expect(secondUrl).toContain('offset=2');
+    });
+
     it('returns [null, error] on 401', async () => {
       const headers = new Headers({ 'content-type': 'application/json' });
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({ ok: false, status: 401, headers, json: vi.fn().mockResolvedValue({}) })
+        vi
+          .fn()
+          .mockResolvedValue({
+            ok: false,
+            status: 401,
+            headers,
+            json: vi.fn().mockResolvedValue({}),
+          })
       );
       const client = makeClient({ maxRetries: 0 });
       const [data, error] = await client.v7.vesselDetailsReport.get();
@@ -94,7 +155,14 @@ describe('VintraceClient v7 - vessel-details-report', () => {
       const headers = new Headers({ 'content-type': 'application/json' });
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({ ok: false, status: 404, headers, json: vi.fn().mockResolvedValue({}) })
+        vi
+          .fn()
+          .mockResolvedValue({
+            ok: false,
+            status: 404,
+            headers,
+            json: vi.fn().mockResolvedValue({}),
+          })
       );
       const client = makeClient({ maxRetries: 0 });
       const [data, error] = await client.v7.vesselDetailsReport.get();
@@ -107,7 +175,14 @@ describe('VintraceClient v7 - vessel-details-report', () => {
       const headers = new Headers({ 'content-type': 'application/json' });
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockResolvedValue({ ok: false, status: 500, headers, json: vi.fn().mockResolvedValue({}) })
+        vi
+          .fn()
+          .mockResolvedValue({
+            ok: false,
+            status: 500,
+            headers,
+            json: vi.fn().mockResolvedValue({}),
+          })
       );
       const client = makeClient({ maxRetries: 0 });
       const [data, error] = await client.v7.vesselDetailsReport.get();

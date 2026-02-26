@@ -1,5 +1,6 @@
 import { VintraceClientConfig, DEFAULT_OPTIONS, VintraceClientOptions } from './config';
 import { vintraceFetch, RequestOptions } from '../http/fetch';
+import { paginate, PaginatedResponse } from '../http/pagination';
 import { VintraceResult } from '../types/result';
 import { VintraceError, VintraceAggregateError } from './errors';
 import { batchFetch } from './utils';
@@ -38,6 +39,7 @@ import type {
   SearchListParams,
   MrpStockHistoryParams,
   MrpStockNotesParams,
+  BulkWineDetails,
   GetBulkWineDetailsReportResponse,
   ProductJobResponse,
   GetBusinessUnitTransactionsResponse,
@@ -1254,15 +1256,89 @@ class VesselDetailsReportClient {
    *
    * Returns a vessel details report based on the provided parameters.
    */
-  get(
+  async get(
     params?: VesselDetailsReportParams
   ): Promise<VintraceResult<GetBulkWineDetailsReportResponse>> {
-    return this.client.request<GetBulkWineDetailsReportResponse>(
+    const baseOffset = params?.offset ?? 0;
+    const limit = params?.limit ?? 100;
+    const firstResponse = await this.client.request<GetBulkWineDetailsReportResponse>(
       'v7/report/vessel-details-report',
       'GET',
       { responseSchema: GetBulkWineDetailsReportResponseSchema },
-      params
+      { ...params, limit: String(limit), offset: String(baseOffset) }
     );
+
+    if (firstResponse[1]) {
+      return [null, firstResponse[1]];
+    }
+
+    const response = firstResponse[0];
+    if (!response) {
+      return [null, null];
+    }
+
+    const totalCount = response.totalResults ?? response.results?.length ?? 0;
+    if (totalCount <= limit) {
+      return [response, null];
+    }
+    const allResults = [...(response.results ?? [])];
+
+    const pageFetcher = async (
+      relativeOffset: number,
+      pageLimit: number
+    ): Promise<VintraceResult<PaginatedResponse<BulkWineDetails>>> => {
+      const [pageData, pageError] = await this.client.request<GetBulkWineDetailsReportResponse>(
+        'v7/report/vessel-details-report',
+        'GET',
+        { responseSchema: GetBulkWineDetailsReportResponseSchema },
+        {
+          ...params,
+          limit: String(pageLimit),
+          offset: String(baseOffset + limit + relativeOffset),
+        }
+      );
+
+      if (pageError) {
+        return [null, pageError];
+      }
+
+      if (!pageData) {
+        return [null, null];
+      }
+
+      return [
+        {
+          totalResults: pageData.totalResults ?? 0,
+          offset: pageData.offset ?? baseOffset + limit + relativeOffset,
+          limit: pageData.limit ?? pageLimit,
+          first: pageData.first ?? null,
+          previous: pageData.previous ?? null,
+          next: pageData.next ?? null,
+          last: pageData.last ?? null,
+          results: pageData.results ?? [],
+        },
+        null,
+      ];
+    };
+
+    try {
+      for await (const item of paginate(pageFetcher, { limit })) {
+        allResults.push(item);
+      }
+    } catch (error) {
+      if (error instanceof VintraceError) {
+        return [null, error];
+      }
+      return [null, new VintraceError(error instanceof Error ? error.message : 'Unknown error', 0)];
+    }
+
+    return [
+      {
+        ...response,
+        results: allResults,
+      },
+      null,
+    ];
   }
 }
 
