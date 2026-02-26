@@ -818,3 +818,43 @@ export type GetBulkWineDetailsReportResponse = z.infer<
   typeof GetBulkWineDetailsReportResponseSchema
 >;
 export type V6PaginatedResponse = z.infer<typeof V6PaginatedResponseSchema>;
+
+export const ProductJobAttachmentSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  url: z.string().optional(),
+});
+
+export const ProductJobSchema = z.object({
+  operationId: z.number(),
+  processId: z.number(),
+  operatorName: z.string().optional(),
+  completedDate: z.number().optional(),
+  completedDateText: z.string().optional(),
+  summary: z.string().optional(),
+  operationName: z.string().optional(),
+  workOrderNumber: z.string().nullable().optional(),
+  reversible: z.boolean().optional(),
+  attachments: ProductJobAttachmentSchema.array().optional(),
+});
+
+export const ProductJobDetailsSchema = z.object({
+  productId: z.number(),
+  batchId: z.number().optional(),
+  vesselId: z.number().optional(),
+  batchCode: z.string().nullable().optional(),
+  vesselCode: z.string().nullable().optional(),
+  canReverseJobs: z.boolean().optional(),
+  jobs: ProductJobSchema.array().optional(),
+});
+
+export const ProductJobResponseSchema = z.object({
+  status: z.string(),
+  message: z.string().nullable().optional(),
+  jobDetails: ProductJobDetailsSchema,
+});
+
+export type ProductJobAttachment = z.infer<typeof ProductJobAttachmentSchema>;
+export type ProductJob = z.infer<typeof ProductJobSchema>;
+export type ProductJobDetails = z.infer<typeof ProductJobDetailsSchema>;
+export type ProductJobResponse = z.infer<typeof ProductJobResponseSchema>;

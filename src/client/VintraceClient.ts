@@ -39,6 +39,7 @@ import type {
   MrpStockHistoryParams,
   MrpStockNotesParams,
   GetBulkWineDetailsReportResponse,
+  ProductJobResponse,
 } from '../validation/schemas';
 import {
   WorkOrderSearchResponseSchema,
@@ -73,6 +74,7 @@ import {
   SampleOperationSearchResponseSchema,
   SearchListResponseSchema,
   GetBulkWineDetailsReportResponseSchema,
+  ProductJobResponseSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -245,6 +247,7 @@ class VintraceV6Api {
   private _search?: SearchClient;
   private _productAnalysis?: ProductAnalysisClient;
   private _productComposition?: ProductCompositionClient;
+  private _productJobs?: ProductJobsClient;
 
   constructor(private client: VintraceClient) {}
 
@@ -302,6 +305,10 @@ class VintraceV6Api {
 
   get productComposition(): ProductCompositionClient {
     return (this._productComposition ??= new ProductCompositionClient(this.client));
+  }
+
+  get productJobs(): ProductJobsClient {
+    return (this._productJobs ??= new ProductJobsClient(this.client));
   }
 }
 
@@ -1697,6 +1704,24 @@ class ProductCompositionClient {
       `v6/product-composition/${productId}`,
       'GET',
       { responseSchema: ProductCompositionResponseSchema }
+    );
+  }
+}
+
+class ProductJobsClient {
+  constructor(private client: VintraceClient) {}
+
+  /**
+   * Get job history for a product by its numeric ID.
+   * Returns the job details and history for a product including transfers,
+   * treatments, and other operations performed on it.
+   * e.g. GET v6/product-jobs/{productId}
+   */
+  get(productId: number): Promise<VintraceResult<ProductJobResponse>> {
+    return this.client.request<ProductJobResponse>(
+      `v6/product-jobs/${productId}`,
+      'GET',
+      { responseSchema: ProductJobResponseSchema }
     );
   }
 }
