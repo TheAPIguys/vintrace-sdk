@@ -1,6 +1,6 @@
 {
   "name": "vintrace-sdk",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "TypeScript SDK for Vintrace API. Note: This SDK is not affiliated with or endorsed by Vintrace in any way. It is an independent project created by a third-party developer to provide a convenient interface for interacting with the Vintrace API. Use at your own risk and always refer to the official Vintrace API documentation for the most accurate and up-to-date information. This SDK is provided as-is without any warranties or guarantees. The developer is not responsible for any issues, bugs, or data loss that may occur from using this SDK. Always test thoroughly in a safe environment before using it in production. This SDK is in beta and may have breaking changes in future releases. Contributions and feedback are welcome to help improve the SDK.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
