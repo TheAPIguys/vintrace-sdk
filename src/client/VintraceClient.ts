@@ -2247,41 +2247,23 @@ class SampleOperationsClient {
       return [[], null];
     }
 
-    const totalCount = response.totalResultCount ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
+    const allResults: unknown[] = [...(response.samples ?? [])];
 
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<SampleOperationSearchResponse>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<SampleOperationSearchResponse>(
-            'v6/sample-operations/search',
-            'GET',
-            { responseSchema: SampleOperationSearchResponseSchema },
-            { ...params, maxResults: limit, firstResult: offset }
-          )
-        );
+    let nextOffset = response.nextResult;
+    while (nextOffset != null) {
+      const [pageData, pageError] = await this.client.request<SampleOperationSearchResponse>(
+        'v6/sample-operations/search',
+        'GET',
+        { responseSchema: SampleOperationSearchResponseSchema },
+        { ...params, maxResults: limit, firstResult: nextOffset }
+      );
+      if (pageError) {
+        return [null, pageError];
       }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
+      if (pageData?.samples) {
+        allResults.push(...pageData.samples);
       }
+      nextOffset = pageData?.nextResult ?? null;
     }
 
     return [allResults, null];

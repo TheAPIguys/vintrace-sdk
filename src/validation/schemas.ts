@@ -670,7 +670,14 @@ export const V6PaginatedResponseSchema = z.object({
 export const InventoryResponseSchema = V6PaginatedResponseSchema;
 export const TransactionSearchResponseSchema = V6PaginatedResponseSchema;
 export const IntakeOperationSearchResponseSchema = V6PaginatedResponseSchema;
-export const SampleOperationSearchResponseSchema = V6PaginatedResponseSchema;
+export const SampleOperationSearchResponseSchema = z.object({
+  status: z.string().optional(),
+  message: z.string().nullable().optional(),
+  resultCount: z.number().nullable().optional(),
+  resultLimit: z.number().optional(),
+  nextResult: z.number().nullable().optional(),
+  samples: z.array(z.unknown()).optional(),
+});
 export const SearchListResponseSchema = V6PaginatedResponseSchema;
 
 // ---------------------------------------------------------------------------
