@@ -2227,15 +2227,63 @@ class SampleOperationsClient {
   /**
    * Maturity samples search.
    *
-   * Returns a list of maturity samples matching search criteria.
+   * Returns a list of maturity samples matching search criteria from
+   * `GET v6/sample-operations/search`.
+   *
+   * **Pagination behaviour:**
+   * - By default (`maxResults` and `firstResult` omitted) the method
+   *   auto-paginates and returns **all** matching records by following the
+   *   API's `nextResult` cursor until a short page signals the end.
+   * - Pass `maxResults` and/or `firstResult` to control pagination yourself —
+   *   in that case a single page is returned as-is.
+   *
+   * @param params.blockId       - Filter by vintrace block ID.
+   * @param params.blockName     - Filter by block name (partial match).
+   * @param params.vineyardId    - Filter by vineyard ID.
+   * @param params.vineyardName  - Filter by vineyard name.
+   * @param params.growerId      - Filter by grower ID.
+   * @param params.growerName    - Filter by grower name.
+   * @param params.ownerId       - Filter by owner ID.
+   * @param params.ownerName     - Filter by owner name.
+   * @param params.vintage       - Filter by vintage year in YYYY format (e.g. `"2022"`).
+   * @param params.operationId   - Filter by a specific operation ID.
+   * @param params.processId     - Filter by delivery process ID.
+   * @param params.externalBlockId          - Filter by external block ID.
+   * @param params.externalSystemBlocksOnly - Only return blocks that have an external ID set.
+   * @param params.recordedAfter  - Only return records with an effective date after this
+   *                                timestamp (milliseconds since Unix epoch, e.g. `157813337000`).
+   * @param params.recordedBefore - Only return records with an effective date before this
+   *                                timestamp (milliseconds since Unix epoch, e.g. `157813337000`).
+   * @param params.modifiedSince  - Only return records added/modified/reversed since this
+   *                                timestamp (milliseconds since Unix epoch).
+   * @param params.maxResults    - Page size (default `100`). Supply this to opt out of
+   *                               auto-pagination and receive a single page.
+   * @param params.firstResult   - Zero-based offset to start from. Supply this together
+   *                               with `maxResults` to manually page through results.
+   * @param params.customAdapter - Special adapter reference for customised `additionalDetails`
+   *                               fields (use as directed by vintrace support).
+   *
+   * @example
+   * // Auto-paginate — returns every matching sample
+   * const [samples, error] = await client.v6.sampleOperations.search({
+   *   vintage: '2023',
+   *   recordedBefore: String(Date.now()),
+   * });
+   *
+   * @example
+   * // Manual page — first 20 results only
+   * const [page, error] = await client.v6.sampleOperations.search({
+   *   maxResults: 20,
+   *   firstResult: 0,
+   * });
    */
   async search(params?: SampleOperationSearchParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.maxResults ? params.maxResults : 100;
+    const limit = params?.maxResults ?? 100;
     const firstResponse = await this.client.request<SampleOperationSearchResponse>(
       'v6/sample-operations/search',
       'GET',
       { responseSchema: SampleOperationSearchResponseSchema },
-      { ...params, maxResults: limit, firstResult: 0 }
+      { ...params, maxResults: limit, firstResult: params?.firstResult ?? 0 }
     );
 
     if (firstResponse[1]) {
@@ -2247,9 +2295,19 @@ class SampleOperationsClient {
       return [[], null];
     }
 
-    const allResults: unknown[] = [...(response.samples ?? [])];
+    const firstPage = response.samples ?? [];
+    // If the caller supplied an explicit maxResults or firstResult, return the
+    // single page as-is — they are controlling pagination themselves.
+    if (params?.maxResults != null || params?.firstResult != null) {
+      return [firstPage, null];
+    }
 
-    let nextOffset = response.nextResult;
+    const allResults: unknown[] = [...firstPage];
+
+    // The API signals "no more pages" by returning fewer items than the limit,
+    // not by setting nextResult to null (nextResult is always a number).
+    let nextOffset: number | null | undefined =
+      firstPage.length >= limit ? response.nextResult : null;
     while (nextOffset != null) {
       const [pageData, pageError] = await this.client.request<SampleOperationSearchResponse>(
         'v6/sample-operations/search',
@@ -2260,10 +2318,10 @@ class SampleOperationsClient {
       if (pageError) {
         return [null, pageError];
       }
-      if (pageData?.samples) {
-        allResults.push(...pageData.samples);
-      }
-      nextOffset = pageData?.nextResult ?? null;
+      const page = pageData?.samples ?? [];
+      allResults.push(...page);
+      // Stop when this page came back short (last page).
+      nextOffset = page.length >= limit ? (pageData?.nextResult ?? null) : null;
     }
 
     return [allResults, null];
