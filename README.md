@@ -4,7 +4,7 @@ A TypeScript SDK for the Vintrace API.
 
 > **Disclaimer**: This SDK is not affiliated with or endorsed by Vintrace. It is an independent, third-party project. Use at your own risk. Always refer to the official Vintrace API documentation. Provided as-is without warranties. Test thoroughly before using in production.
 >
-> **GitHub**: https://github.com/anomalyco/vintrace-sdk
+> **GitHub**: https://github.com/TheAPIguys/vintrace-sdk
 
 ---
 
@@ -29,18 +29,44 @@ pnpm add vintrace-sdk
 import { VintraceClient } from 'vintrace-sdk';
 
 const client = new VintraceClient({
-  baseUrl: 'https://oz50.vintrace.net',  // your region (oz50, sandbox, etc.)
-  organization: 'wrw',                    // your customer/organization code
+  baseUrl: process.env.VINTRACE_BASE_URL!, // e.g. https://oz50.vintrace.net
+  organization: process.env.VINTRACE_ORG!, // your customer/organization code
   token: process.env.VINTRACE_TOKEN!,
 });
 
-// Get a single record
-const [order, error] = await client.v6.salesOrders.get('123');
+// List work orders
+const [orders, error] = await client.v6.workOrders.getAll({ max: '5', workOrderState: 'ANY' });
 if (error) {
-  console.error(error.status, error.message);
-  return;
+  console.error('Error:', error.message, '| status:', error.status);
+  console.error('Body:', JSON.stringify(error.body, null, 2));
+  console.error('Correlation ID:', error.correlationId);
+} else {
+  console.log(JSON.stringify(orders, null, 2));
 }
-console.log(order.id); // fully typed, never null here
+
+// List sales orders filtered by invoice date
+const [sales, salesError] = await client.v6.salesOrders.getAll({
+  max: '100',
+  invStartDate: '2026-01-01',
+});
+if (salesError) {
+  console.error('Error:', salesError.message, '| status:', salesError.status);
+} else {
+  console.log(JSON.stringify(sales, null, 2));
+}
+
+// Vessel details report
+const [vessels, vesselsError] = await client.v7.vesselDetailsReport.get({
+  limit: 100,
+  offset: 0,
+  asAtDate: Date.now(),
+  vesselType: 'TANK',
+});
+if (vesselsError) {
+  console.error('Error:', vesselsError.message, '| status:', vesselsError.status);
+} else {
+  console.log(JSON.stringify(vessels.results, null, 2));
+}
 ```
 
 ---
@@ -53,11 +79,11 @@ const client = new VintraceClient({
   organization: 'wrw',
   token: 'your-bearer-token',
   options: {
-    timeout: 30000,           // request timeout in ms (default: 30000)
-    maxRetries: 3,            // exponential backoff retries (default: 3)
-    parallelLimit: 5,         // max concurrent requests for batch operations (default: 5)
-    validateRequests: true,   // Zod validate request payloads (default: true)
-    validateResponses: true,  // Zod validate API responses (default: true)
+    timeout: 30000, // request timeout in ms (default: 30000)
+    maxRetries: 3, // exponential backoff retries (default: 3)
+    parallelLimit: 5, // max concurrent requests for batch operations (default: 5)
+    validateRequests: true, // Zod validate request payloads (default: true)
+    validateResponses: true, // Zod validate API responses (default: true)
   },
 });
 ```
@@ -136,19 +162,25 @@ Fetches multiple IDs concurrently (default: 5 at a time):
 
 ```typescript
 const [results, error] = await client.v6.salesOrders.getMany(['id1', 'id2', 'id3']);
-if (error) { /* handle VintraceAggregateError */ }
+if (error) {
+  /* handle VintraceAggregateError */
+}
 ```
 
 ### Create
 
 ```typescript
-const [newOrder, error] = await client.v6.salesOrders.post({ /* payload */ });
+const [newOrder, error] = await client.v6.salesOrders.post({
+  /* payload */
+});
 ```
 
 ### Update
 
 ```typescript
-const [updated, error] = await client.v6.salesOrders.update('123', { /* payload */ });
+const [updated, error] = await client.v6.salesOrders.update('123', {
+  /* payload */
+});
 ```
 
 ---
@@ -157,9 +189,9 @@ const [updated, error] = await client.v6.salesOrders.update('123', { /* payload 
 
 ```typescript
 type VintraceResult<T> =
-  | [data: T,    error: null]           // success
-  | [data: null, error: VintraceError]  // error
-  | [data: null, error: null];          // 204 No Content
+  | [data: T, error: null] // success
+  | [data: null, error: VintraceError] // error
+  | [data: null, error: null]; // 204 No Content
 ```
 
 ---
@@ -177,42 +209,42 @@ type VintraceResult<T> =
 
 ### v6 Endpoints
 
-| Module | Methods |
-|--------|---------|
-| WorkOrders | `getAll`, `get`, `getMany`, `post`, `update` |
-| SalesOrders | `getAll`, `get`, `getMany`, `post`, `update` |
-| Refunds | `getAll`, `get`, `getMany`, `post` |
-| Parties | `getAll`, `get`, `getMany`, `post` |
-| Products | `getAll`, `get`, `getMany`, `post` |
-| ProductUpdate | `post` |
-| Transactions | `search` |
-| IntakeOperations | `search` |
-| SampleOperations | `search` |
-| BlockAssessments | `post` |
-| MRPStock | `get`, `updateFields`, `getDistributions`, `getHistoryItems`, `getRawComponents`, `getNotes`, `postNote`, `updateNote` |
-| Inventory | `getAll` |
-| Search | `list`, `lookup` |
+| Module           | Methods                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| WorkOrders       | `getAll`, `get`, `getMany`, `post`, `update`                                                                           |
+| SalesOrders      | `getAll`, `get`, `getMany`, `post`, `update`                                                                           |
+| Refunds          | `getAll`, `get`, `getMany`, `post`                                                                                     |
+| Parties          | `getAll`, `get`, `getMany`, `post`                                                                                     |
+| Products         | `getAll`, `get`, `getMany`, `post`                                                                                     |
+| ProductUpdate    | `post`                                                                                                                 |
+| Transactions     | `search`                                                                                                               |
+| IntakeOperations | `search`                                                                                                               |
+| SampleOperations | `search`                                                                                                               |
+| BlockAssessments | `post`                                                                                                                 |
+| MRPStock         | `get`, `updateFields`, `getDistributions`, `getHistoryItems`, `getRawComponents`, `getNotes`, `postNote`, `updateNote` |
+| Inventory        | `getAll`                                                                                                               |
+| Search           | `list`, `lookup`                                                                                                       |
 
 ### v7 Endpoints
 
-| Module | Status | Methods |
-|--------|--------|---------|
-| Costs | Ready | `businessUnitTransactions` |
-| Blocks | Partial | `getAll`, `get`, `post`, `patch` |
-| Assessments | Ready | `getAll` |
-| Vineyards | Ready | `post` |
-| MaturitySamples | Ready | `post` |
-| Parties (v7) | Ready | `getAll`, `post` |
-| Shipments | Ready | `getAll` |
-| BarrelTreatments | Ready | `getAll` |
-| Bookings | Ready | `post`, `deactivate` |
-| FruitIntakes | Ready | `post`, `updatePricing`, `updateMetrics` |
-| BulkIntakes | Ready | `getAll`, `post`, `patch` |
-| TrialBlends | Ready | `getAll` |
-| WorkOrders (v7) | Ready | `getAll` |
-| Tirage | Ready | `get`, `patch` |
-| BarrelsMovements | Ready | `post` |
-| VesselDetailsReport | Ready | `get` |
+| Module              | Status  | Methods                                  |
+| ------------------- | ------- | ---------------------------------------- |
+| Costs               | Ready   | `businessUnitTransactions`               |
+| Blocks              | Partial | `getAll`, `get`, `post`, `patch`         |
+| Assessments         | Ready   | `getAll`                                 |
+| Vineyards           | Ready   | `post`                                   |
+| MaturitySamples     | Ready   | `post`                                   |
+| Parties (v7)        | Ready   | `getAll`, `post`                         |
+| Shipments           | Ready   | `getAll`                                 |
+| BarrelTreatments    | Ready   | `getAll`                                 |
+| Bookings            | Ready   | `post`, `deactivate`                     |
+| FruitIntakes        | Ready   | `post`, `updatePricing`, `updateMetrics` |
+| BulkIntakes         | Ready   | `getAll`, `post`, `patch`                |
+| TrialBlends         | Ready   | `getAll`                                 |
+| WorkOrders (v7)     | Ready   | `getAll`                                 |
+| Tirage              | Ready   | `get`, `patch`                           |
+| BarrelsMovements    | Ready   | `post`                                   |
+| VesselDetailsReport | Ready   | `get`                                    |
 
 ---
 
@@ -231,11 +263,11 @@ pnpm generate-types # Regenerate types from OpenAPI YAML
 
 ### Output
 
-| Format | File |
-|--------|------|
-| ESM | `dist/index.js` |
-| CJS | `dist/index.cjs` |
-| Types | `dist/index.d.ts` |
+| Format | File              |
+| ------ | ----------------- |
+| ESM    | `dist/index.js`   |
+| CJS    | `dist/index.cjs`  |
+| Types  | `dist/index.d.ts` |
 
 ---
 
