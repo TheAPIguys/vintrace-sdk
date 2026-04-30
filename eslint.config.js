@@ -8,7 +8,7 @@ const tsconfigPath = join(__dirname, 'tsconfig.json');
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '**/*.cjs', 'src/types/generated.ts'],
+    ignores: ['dist/**', 'node_modules/**', '**/*.cjs'],
   },
   {
     files: ['src/**/*.ts'],
