@@ -340,7 +340,7 @@ describe('VintraceClient v7 - FruitIntakes', () => {
       await client.v7.fruitIntakes.updatePricing('123', { pricePerTon: 500 });
       const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
       expect(url).toBe(`${BASE_URL}/${ORG}/api/v7/operation/fruit-intakes/123/pricing`);
-      expect(init.method).toBe('POST');
+      expect(init.method).toBe('PUT');
     });
   });
 
@@ -351,7 +351,7 @@ describe('VintraceClient v7 - FruitIntakes', () => {
       await client.v7.fruitIntakes.updateMetrics('123', { brix: 22.5 });
       const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
       expect(url).toBe(`${BASE_URL}/${ORG}/api/v7/operation/fruit-intakes/123/metrics`);
-      expect(init.method).toBe('POST');
+      expect(init.method).toBe('PUT');
     });
   });
 });
