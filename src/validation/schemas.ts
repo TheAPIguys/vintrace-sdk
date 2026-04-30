@@ -1136,6 +1136,24 @@ export type UpdateFruitIntakePricingResponse = z.infer<
   typeof UpdateFruitIntakePricingResponseSchema
 >;
 
+export const UpdateMetricsSchema = z.object({
+  metrics: z
+    .array(
+      z.object({
+        name: z.string(),
+        value: z.number(),
+      })
+    )
+    .optional(),
+});
+
+export const UpdateMetricsResponseSchema = z.object({
+  data: UpdateMetricsSchema.optional(),
+});
+
+export type UpdateMetrics = z.infer<typeof UpdateMetricsSchema>;
+export type UpdateMetricsResponse = z.infer<typeof UpdateMetricsResponseSchema>;
+
 // ---------------------------------------------------------------------------
 // Bulk Intakes
 // ---------------------------------------------------------------------------

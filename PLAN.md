@@ -1,64 +1,76 @@
-# Implementation Plan
+# Implementation Status
 
 Missing features identified by comparing `vintrace-v6-apis.yaml` and `vintrace-api-v7-combined.yaml` against the SDK implementation in `src/client/VintraceClient.ts`.
 
-## v6 — 1 missing endpoint
+## v6
 
-- [ ] **`GET /stock/lookup`** — Get stock item by code or id (query params: `code`, `id`). Add to `InventoryClient` or create a new client.
+- [x] **`GET /stock/lookup`** — Implemented in `InventoryClient.lookup()`. Returns `unknown` (needs schema).
 
-## v7 — 14 missing endpoints
+## v7 — Endpoints
 
 ### Harvest
-- [ ] **`POST /v7/harvest/blocks/{blockId}/assessments`** — Upsert block assessment (v7 version; separate from v6 block assessments)
+- [x] **`POST /v7/harvest/blocks/{blockId}/assessments`** — Implemented in `BlocksClient.createAssessment()`.
 
 ### Wine batches
-- [ ] **`GET /v7/operation/wine-batches`** — List wine batches (pagination params: `limit`, `offset`, `ids`, `include`)
-- [ ] **`POST /v7/operation/wine-batches`** — Create a wine batch
+- [x] **`GET /v7/operation/wine-batches`** — `WineBatchesClient.getAll()`, returns `unknown`.
+- [x] **`POST /v7/operation/wine-batches`** — `WineBatchesClient.create()`, returns `unknown`.
 
 ### Documents
-- [ ] **`PUT /v7/operation/operation/documents`** — Upload/attach a document to an operation
+- [x] **`PUT /v7/operation/operation/documents`** — `DocumentsClient.attach()`, returns `unknown`.
 
 ### Stock
-- [ ] **`POST /v7/stock/receivals`** — Receive stock operation
-- [ ] **`GET /v7/stock/dispatches`** — List stock dispatches (paginated)
+- [x] **`POST /v7/stock/receivals`** — `StockClient.receive()`, returns `unknown`.
+- [x] **`GET /v7/stock/dispatches`** — `StockClient.getDispatches()`, returns `unknown`.
 
 ### Vessels
-- [ ] **`GET /v7/vessel/barrels/{id}`** — Get barrel details
-- [ ] **`GET /v7/vessel/barrel-groups/{id}`** — Get barrel group details
-- [ ] **`POST /v7/vessel/tanks`** — Create a tank
-- [ ] **`GET /v7/vessel/tanks/{id}`** — Get tank details
-- [ ] **`GET /v7/vessel/tankers/{id}`** — Get tanker details
-- [ ] **`GET /v7/vessel/bins/{id}`** — Get bin details
+- [x] **`GET /v7/vessel/barrels/{id}`** — `VesselsClient.getBarrel()`, returns `unknown`.
+- [x] **`GET /v7/vessel/barrel-groups/{id}`** — `VesselsClient.getBarrelGroup()`, returns `unknown`.
+- [x] **`POST /v7/vessel/tanks`** — `VesselsClient.createTank()`, returns `unknown`.
+- [x] **`GET /v7/vessel/tanks/{id}`** — `VesselsClient.getTank()`, returns `unknown`.
+- [x] **`GET /v7/vessel/tankers/{id}`** — `VesselsClient.getTanker()`, returns `unknown`.
+- [x] **`GET /v7/vessel/bins/{id}`** — `VesselsClient.getBin()`, returns `unknown`.
 
 ### Accounting
-- [ ] **`POST /v7/account/purchase-orders`** — Create or update a purchase order
-- [ ] **`GET /v7/account/purchase-orders/{id}`** — Get purchase order detail
+- [x] **`POST /v7/account/purchase-orders`** — `PurchaseOrdersClient.create()`, returns `unknown`.
+- [x] **`GET /v7/account/purchase-orders/{id}`** — `PurchaseOrdersClient.get()`, returns `unknown`.
 
-## HTTP method mismatches (spec says PUT, SDK calls POST)
+## HTTP method mismatches (spec says PUT, SDK calls POST) ✅
 
-- [ ] **`FruitIntakesClient.updatePricing()`** — Change from `POST` to `PUT` for `v7/operation/fruit-intakes/{fruitIntakeId}/pricing`
-- [ ] **`FruitIntakesClient.updateMetrics()`** — Change from `POST` to `PUT` for `v7/operation/fruit-intakes/{fruitIntakeId}/metrics`
+- [x] **`FruitIntakesClient.updatePricing()`** — Created with `PUT` for `v7/operation/fruit-intakes/{fruitIntakeId}/pricing`. Wired `UpdateFruitIntakePricingResponseSchema`.
+- [x] **`FruitIntakesClient.updateMetrics()`** — Created with `PUT` for `v7/operation/fruit-intakes/{fruitIntakeId}/metrics`. Wired `UpdateMetricsResponseSchema`.
 
 ## Missing typed responses (returns `unknown` instead of typed schema)
 
-- [ ] **`BlocksClient.getAll()`** — Wire `GetBlocksSuccessResponseSchema`
 - [ ] **`BlocksClient.get()`** — Wire response schema
-- [ ] **`CostsClient.businessUnitTransactions()`** — Wire `GetBusinessUnitTransactionsResponseSchema`
-- [ ] **`AssessmentsClient.getAll()`** — Wire `GetAssessmentsResponseSchema`
-- [ ] **`PartiesV7Client.getAll()`** — Wire `GetPartiesV7ResponseSchema`
-- [ ] **`ShipmentsClient.getAll()`** — Wire `GetShipmentsSuccessResponseSchema`
-- [ ] **`BarrelTreatmentsClient.getAll()`** — Wire `GetBarrelTreatmentsSuccessResponseSchema`
-- [ ] **`BulkIntakesClient.getAll()`** — Wire `GetBulkIntakesSuccessResponseSchema`
-- [ ] **`TrialBlendsClient.getAll()`** — Wire `GetTrialBlendsSuccessResponseSchema`
-- [ ] **`WorkOrdersV7Client.getAll()`** — Wire `GetWorkOrdersV7ResponseSchema`
-- [ ] **`TirageClient.patch()`** — Wire response schema
+- [ ] **`WineBatchesClient.getAll()`** — Wire response schema
+- [ ] **`WineBatchesClient.create()`** — Wire response schema
+- [ ] **`DocumentsClient.attach()`** — Wire response schema
+- [ ] **`StockClient.receive()`** — Wire response schema
+- [ ] **`StockClient.getDispatches()`** — Wire response schema
+- [ ] **`VesselsClient.getBarrel()`** — Wire response schema
+- [ ] **`VesselsClient.getBarrelGroup()`** — Wire response schema
+- [ ] **`VesselsClient.createTank()`** — Wire response schema
+- [ ] **`VesselsClient.getTank()`** — Wire response schema
+- [ ] **`VesselsClient.getTanker()`** — Wire response schema
+- [ ] **`VesselsClient.getBin()`** — Wire response schema
+- [ ] **`PurchaseOrdersClient.create()`** — Wire response schema
+- [ ] **`PurchaseOrdersClient.get()`** — Wire response schema
 
-## Missing `getMany()` methods
+## Missing classes (referenced by VintraceV7Api getters but never defined)
 
-- [ ] **`AssessmentsClient.getMany(ids)`** — Add batch fetch
-- [ ] **`PartiesV7Client.getMany(ids)`** — Add batch fetch
-- [ ] **`ShipmentsClient.getMany(ids)`** — Add batch fetch
-- [ ] **`BarrelTreatmentsClient.getMany(ids)`** — Add batch fetch
-- [ ] **`BulkIntakesClient.getMany(ids)`** — Add batch fetch
-- [ ] **`TrialBlendsClient.getMany(ids)`** — Add batch fetch
-- [ ] **`WorkOrdersV7Client.getMany(ids)`** — Add batch fetch
+- [ ] **`AssessmentsClient`** — Create with `getAll()` (wire `GetAssessmentsResponseSchema`), `get()`, `getMany()`
+- [ ] **`VineyardsClient`** — Create class
+- [ ] **`MaturitySamplesClient`** — Create class
+- [ ] **`PartiesV7Client`** — Create with `getAll()` (wire `GetPartiesV7ResponseSchema`), `get()`, `getMany()`
+- [ ] **`ShipmentsClient`** — Create with `getAll()` (wire `GetShipmentsSuccessResponseSchema`), `get()`, `getMany()`
+- [ ] **`BarrelTreatmentsClient`** — Create with `getAll()` (wire `GetBarrelTreatmentsSuccessResponseSchema`), `get()`, `getMany()`
+- [x] **`FruitIntakesClient`** — Created with `create()`, `updatePricing()` (PUT), `updateMetrics()` (PUT). All wired with schemas.
+- [ ] **`BulkIntakesClient`** — Create with `getAll()` (wire `GetBulkIntakesSuccessResponseSchema`), `get()`, `getMany()`
+- [ ] **`TrialBlendsClient`** — Create with `getAll()` (wire `GetTrialBlendsSuccessResponseSchema`), `get()`, `getMany()`
+- [ ] **`WorkOrdersV7Client`** — Create with `getAll()` (wire `GetWorkOrdersV7ResponseSchema`), `get()`, `getMany()`
+
+## Already wired with schemas ✅
+
+- `BlocksClient.getAll()` — `GetBlocksSuccessResponseSchema`
+- `CostsClient.businessUnitTransactions()` — `GetBusinessUnitTransactionsResponseSchema`
+- `TirageClient.get()` / `TirageClient.patch()` — `TirageSuccessResponseSchema`
