@@ -1117,9 +1117,10 @@ export const CreateFruitIntakeSuccessResponseSchema = z.object({
 });
 
 export const UpdateFruitIntakePricingSchema = z.object({
-  pricePerTon: z.number().optional(),
-  pricePerKg: z.number().optional(),
-  bypassed: z.boolean().optional(),
+  gross: MeasurementSchema.optional(),
+  tare: MeasurementSchema.optional(),
+  net: MeasurementSchema.optional(),
+  unitPrice: MeasurementSchema.optional(),
 });
 
 export const UpdateFruitIntakePricingResponseSchema = z.object({

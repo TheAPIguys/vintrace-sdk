@@ -44,7 +44,9 @@ import type {
   ProductJobResponse,
   GetBusinessUnitTransactionsResponse,
   CreateFruitIntakeSuccessResponse,
+  UpdateFruitIntakePricing,
   UpdateFruitIntakePricingResponse,
+  UpdateMetrics,
   UpdateMetricsResponse,
   TirageSuccessResponse,
   BarrelsMovement,
@@ -87,7 +89,9 @@ import {
   ProductJobResponseSchema,
   GetBusinessUnitTransactionsResponseSchema,
   CreateFruitIntakeSuccessResponseSchema,
+  UpdateFruitIntakePricingSchema,
   UpdateFruitIntakePricingResponseSchema,
+  UpdateMetricsSchema,
   UpdateMetricsResponseSchema,
   TirageSuccessResponseSchema,
   CreateBarrelsMovementRequestSchema,
@@ -1547,12 +1551,12 @@ class FruitIntakesClient {
    */
   updatePricing(
     fruitIntakeId: string,
-    data: unknown
+    data: UpdateFruitIntakePricing
   ): Promise<VintraceResult<UpdateFruitIntakePricingResponse>> {
     return this.client.request<UpdateFruitIntakePricingResponse>(
       `v7/operation/fruit-intakes/${fruitIntakeId}/pricing`,
       'PUT',
-      { responseSchema: UpdateFruitIntakePricingResponseSchema },
+      { requestSchema: UpdateFruitIntakePricingSchema, responseSchema: UpdateFruitIntakePricingResponseSchema },
       data
     );
   }
@@ -1564,12 +1568,12 @@ class FruitIntakesClient {
    */
   updateMetrics(
     fruitIntakeId: string,
-    data: unknown
+    data: UpdateMetrics
   ): Promise<VintraceResult<UpdateMetricsResponse>> {
     return this.client.request<UpdateMetricsResponse>(
       `v7/operation/fruit-intakes/${fruitIntakeId}/metrics`,
       'PUT',
-      { responseSchema: UpdateMetricsResponseSchema },
+      { responseSchema: UpdateMetricsResponseSchema, requestSchema: UpdateMetricsSchema },
       data
     );
   }
