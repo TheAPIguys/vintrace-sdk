@@ -43,20 +43,15 @@ import type {
   GetBulkWineDetailsReportResponse,
   ProductJobResponse,
   GetBusinessUnitTransactionsResponse,
-  GetAssessmentsResponse,
-  VineyardResponse,
-  MaturitySampleResponse,
-  PartyV7,
-  GetPartiesV7Response,
-  GetShipmentsSuccessResponse,
-  GetBarrelTreatmentsSuccessResponse,
   CreateFruitIntakeSuccessResponse,
+  UpdateFruitIntakePricing,
   UpdateFruitIntakePricingResponse,
-  GetBulkIntakesSuccessResponse,
-  GetTrialBlendsSuccessResponse,
-  GetWorkOrdersV7Response,
+  UpdateMetrics,
+  UpdateMetricsResponse,
   TirageSuccessResponse,
   BarrelsMovement,
+  BlockData,
+  TransactionDetails,
 } from '../validation/schemas';
 import {
   WorkOrderSearchResponseSchema,
@@ -93,21 +88,14 @@ import {
   GetBulkWineDetailsReportResponseSchema,
   ProductJobResponseSchema,
   GetBusinessUnitTransactionsResponseSchema,
-  GetAssessmentsResponseSchema,
-  VineyardResponseSchema,
-  MaturitySampleResponseSchema,
-  PartyV7Schema,
-  GetPartiesV7ResponseSchema,
-  GetShipmentsSuccessResponseSchema,
-  GetBarrelTreatmentsSuccessResponseSchema,
-  FruitIntakeRequestSchema,
   CreateFruitIntakeSuccessResponseSchema,
+  UpdateFruitIntakePricingSchema,
   UpdateFruitIntakePricingResponseSchema,
-  GetBulkIntakesSuccessResponseSchema,
-  GetTrialBlendsSuccessResponseSchema,
-  GetWorkOrdersV7ResponseSchema,
+  UpdateMetricsSchema,
+  UpdateMetricsResponseSchema,
   TirageSuccessResponseSchema,
   CreateBarrelsMovementRequestSchema,
+  FruitIntakeRequestSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -348,20 +336,16 @@ class VintraceV6Api {
 class VintraceV7Api {
   private _costs?: CostsClient;
   private _blocks?: BlocksClient;
-  private _assessments?: AssessmentsClient;
-  private _vineyards?: VineyardsClient;
-  private _maturitySamples?: MaturitySamplesClient;
-  private _parties?: PartiesV7Client;
-  private _shipments?: ShipmentsClient;
-  private _barrelTreatments?: BarrelTreatmentsClient;
   private _bookings?: BookingsClient;
   private _fruitIntakes?: FruitIntakesClient;
-  private _bulkIntakes?: BulkIntakesClient;
-  private _trialBlends?: TrialBlendsClient;
-  private _workOrders?: WorkOrdersV7Client;
   private _tirage?: TirageClient;
   private _barrelsMovements?: BarrelsMovementsClient;
   private _vesselDetailsReport?: VesselDetailsReportClient;
+  private _wineBatches?: WineBatchesClient;
+  private _documents?: DocumentsClient;
+  private _stock?: StockClient;
+  private _vessels?: VesselsClient;
+  private _purchaseOrders?: PurchaseOrdersClient;
 
   constructor(private client: VintraceClient) {}
 
@@ -373,48 +357,12 @@ class VintraceV7Api {
     return (this._blocks ??= new BlocksClient(this.client));
   }
 
-  get assessments(): AssessmentsClient {
-    return (this._assessments ??= new AssessmentsClient(this.client));
-  }
-
-  get vineyards(): VineyardsClient {
-    return (this._vineyards ??= new VineyardsClient(this.client));
-  }
-
-  get maturitySamples(): MaturitySamplesClient {
-    return (this._maturitySamples ??= new MaturitySamplesClient(this.client));
-  }
-
-  get parties(): PartiesV7Client {
-    return (this._parties ??= new PartiesV7Client(this.client));
-  }
-
-  get shipments(): ShipmentsClient {
-    return (this._shipments ??= new ShipmentsClient(this.client));
-  }
-
-  get barrelTreatments(): BarrelTreatmentsClient {
-    return (this._barrelTreatments ??= new BarrelTreatmentsClient(this.client));
-  }
-
   get bookings(): BookingsClient {
     return (this._bookings ??= new BookingsClient(this.client));
   }
 
   get fruitIntakes(): FruitIntakesClient {
     return (this._fruitIntakes ??= new FruitIntakesClient(this.client));
-  }
-
-  get bulkIntakes(): BulkIntakesClient {
-    return (this._bulkIntakes ??= new BulkIntakesClient(this.client));
-  }
-
-  get trialBlends(): TrialBlendsClient {
-    return (this._trialBlends ??= new TrialBlendsClient(this.client));
-  }
-
-  get workOrders(): WorkOrdersV7Client {
-    return (this._workOrders ??= new WorkOrdersV7Client(this.client));
   }
 
   get tirage(): TirageClient {
@@ -427,6 +375,26 @@ class VintraceV7Api {
 
   get vesselDetailsReport(): VesselDetailsReportClient {
     return (this._vesselDetailsReport ??= new VesselDetailsReportClient(this.client));
+  }
+
+  get wineBatches(): WineBatchesClient {
+    return (this._wineBatches ??= new WineBatchesClient(this.client));
+  }
+
+  get documents(): DocumentsClient {
+    return (this._documents ??= new DocumentsClient(this.client));
+  }
+
+  get stock(): StockClient {
+    return (this._stock ??= new StockClient(this.client));
+  }
+
+  get vessels(): VesselsClient {
+    return (this._vessels ??= new VesselsClient(this.client));
+  }
+
+  get purchaseOrders(): PurchaseOrdersClient {
+    return (this._purchaseOrders ??= new PurchaseOrdersClient(this.client));
   }
 }
 
@@ -1127,7 +1095,7 @@ class BlocksClient {
    *
    * API consumer can use the include and vintage query params to request including more information in the response.
    */
-  async getAll(params?: Record<string, unknown>): Promise<VintraceResult<unknown[]>> {
+  async getAll(params?: Record<string, unknown>): Promise<VintraceResult<BlockData[]>> {
     const limit = params?.limit ? parseInt(String(params.limit), 10) : 100;
     const firstResponse = await this.client.request<GetBlocksSuccessResponse>(
       'v7/harvest/blocks',
@@ -1153,7 +1121,7 @@ class BlocksClient {
     const pagesNeeded = Math.ceil(totalCount / limit);
     const parallelLimit = this.client.options.parallelLimit;
 
-    const allResults: unknown[] = [...(response.results ?? [])];
+    const allResults: BlockData[] = [...(response.results ?? [])];
 
     for (let i = 1; i < pagesNeeded; i += parallelLimit) {
       const batchSize = Math.min(parallelLimit, pagesNeeded - i);
@@ -1223,6 +1191,15 @@ class BlocksClient {
      * Note, not all fields will support this PATCH operation.
      */
     return this.client.request<unknown>(`v7/harvest/blocks/${id}`, 'PATCH', {}, data);
+  }
+
+  /**
+   * Upsert assessment data for a block.
+   *
+   * Create or update assessment data for a block by its blockId.
+   */
+  createAssessment(blockId: string, data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/harvest/blocks/${blockId}/assessments`, 'POST', {}, data);
   }
 }
 
@@ -1362,7 +1339,7 @@ class CostsClient {
    */
   async businessUnitTransactions(
     params: CostsBusinessUnitTransactionsParams
-  ): Promise<VintraceResult<unknown[]>> {
+  ): Promise<VintraceResult<TransactionDetails[]>> {
     const limit = params?.limit ?? 100;
     const firstResponse = await this.client.request<GetBusinessUnitTransactionsResponse>(
       'v7/costs/business-unit-transactions',
@@ -1388,7 +1365,7 @@ class CostsClient {
     const pagesNeeded = Math.ceil(totalCount / limit);
     const parallelLimit = this.client.options.parallelLimit;
 
-    const allResults: unknown[] = [...(response.results ?? [])];
+    const allResults: TransactionDetails[] = [...(response.results ?? [])];
 
     for (let i = 1; i < pagesNeeded; i += parallelLimit) {
       const batchSize = Math.min(parallelLimit, pagesNeeded - i);
@@ -1419,425 +1396,38 @@ class CostsClient {
 
     return [allResults, null];
   }
+
 }
 
-export interface AssessmentsListParams {
+export interface WineBatchesListParams {
   limit?: number;
   offset?: number;
+  ids?: string;
+  include?: string;
 }
 
-class AssessmentsClient {
+class WineBatchesClient {
   constructor(private client: VintraceClient) {}
 
   /**
-   * Get all assessments.
+   * Get a list of wine batches.
    *
-   * Returns a paginated list of block assessments.
+   * Returns a paginated list of wine batches.
    */
-  async getAll(params?: AssessmentsListParams): Promise<VintraceResult<unknown[]>> {
+  async getAll(params?: WineBatchesListParams): Promise<VintraceResult<unknown[]>> {
     const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetAssessmentsResponse>(
-      'v7/harvest/assessments',
+    const firstResponse = await this.client.request<unknown>(
+      'v7/operation/wine-batches',
       'GET',
-      { responseSchema: GetAssessmentsResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetAssessmentsResponse>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetAssessmentsResponse>(
-            'v7/harvest/assessments',
-            'GET',
-            { responseSchema: GetAssessmentsResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
-  }
-}
-
-class VineyardsClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * Create a vineyard.
-   *
-   * Creates a new vineyard in the system.
-   */
-  post(data: unknown): Promise<VintraceResult<VineyardResponse>> {
-    return this.client.request<VineyardResponse>(
-      'v7/harvest/vineyards',
-      'POST',
-      { responseSchema: VineyardResponseSchema },
-      data
-    );
-  }
-}
-
-class MaturitySamplesClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * Create a maturity sample.
-   *
-   * Creates a new maturity sample in the system.
-   */
-  post(data: unknown): Promise<VintraceResult<MaturitySampleResponse>> {
-    return this.client.request<MaturitySampleResponse>(
-      'v7/harvest/maturity-samples',
-      'POST',
-      { responseSchema: MaturitySampleResponseSchema },
-      data
-    );
-  }
-}
-
-export interface PartiesV7ListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class PartiesV7Client {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all parties.
-   *
-   * Returns a paginated list of parties.
-   */
-  async getAll(params?: PartiesV7ListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetPartiesV7Response>(
-      'v7/identity/parties',
-      'GET',
-      { responseSchema: GetPartiesV7ResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetPartiesV7Response>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetPartiesV7Response>(
-            'v7/identity/parties',
-            'GET',
-            { responseSchema: GetPartiesV7ResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
-  }
-
-  /**
-   * Upsert a party.
-   *
-   * Creates or updates a party.
-   */
-  post(data: unknown): Promise<VintraceResult<PartyV7>> {
-    return this.client.request<PartyV7>(
-      'v7/identity/parties',
-      'POST',
-      { responseSchema: PartyV7Schema },
-      data
-    );
-  }
-}
-
-export interface ShipmentsListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class ShipmentsClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all shipments.
-   *
-   * Returns a paginated list of shipments.
-   */
-  async getAll(params?: ShipmentsListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetShipmentsSuccessResponse>(
-      'v7/operation/shipments',
-      'GET',
-      { responseSchema: GetShipmentsSuccessResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetShipmentsSuccessResponse>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetShipmentsSuccessResponse>(
-            'v7/operation/shipments',
-            'GET',
-            { responseSchema: GetShipmentsSuccessResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
-  }
-}
-
-export interface BarrelTreatmentsListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class BarrelTreatmentsClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all barrel treatments.
-   *
-   * Returns a paginated list of barrel treatments.
-   */
-  async getAll(params?: BarrelTreatmentsListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetBarrelTreatmentsSuccessResponse>(
-      'v7/operation/barrel-treatments',
-      'GET',
-      { responseSchema: GetBarrelTreatmentsSuccessResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetBarrelTreatmentsSuccessResponse>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetBarrelTreatmentsSuccessResponse>(
-            'v7/operation/barrel-treatments',
-            'GET',
-            { responseSchema: GetBarrelTreatmentsSuccessResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
-  }
-}
-
-class FruitIntakesClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * Create a fruit intake.
-   *
-   * Creates a new fruit intake in the system.
-   */
-  post(data: unknown): Promise<VintraceResult<CreateFruitIntakeSuccessResponse>> {
-    return this.client.request<CreateFruitIntakeSuccessResponse>(
-      'v7/operation/fruit-intakes',
-      'POST',
-      {
-        responseSchema: CreateFruitIntakeSuccessResponseSchema,
-        requestSchema: FruitIntakeRequestSchema,
-      },
-      data
-    );
-  }
-
-  /**
-   * Update fruit intake pricing.
-   *
-   * Updates pricing information for a fruit intake.
-   */
-  updatePricing(
-    fruitIntakeId: string,
-    data: unknown
-  ): Promise<VintraceResult<UpdateFruitIntakePricingResponse>> {
-    return this.client.request<UpdateFruitIntakePricingResponse>(
-      `v7/operation/fruit-intakes/${fruitIntakeId}/pricing`,
-      'POST',
-      { responseSchema: UpdateFruitIntakePricingResponseSchema },
-      data
-    );
-  }
-
-  /**
-   * Update fruit intake metrics.
-   *
-   * Updates metrics for a fruit intake.
-   */
-  updateMetrics(fruitIntakeId: string, data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>(
-      `v7/operation/fruit-intakes/${fruitIntakeId}/metrics`,
-      'POST',
       {},
-      data
-    );
-  }
-}
-
-export interface BulkIntakesListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class BulkIntakesClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all bulk intakes.
-   *
-   * Returns a paginated list of bulk intakes.
-   */
-  async getAll(params?: BulkIntakesListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetBulkIntakesSuccessResponse>(
-      'v7/operation/bulk-intakes',
-      'GET',
-      { responseSchema: GetBulkIntakesSuccessResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
+      { ...params, limit: String(limit), offset: String(params?.offset ?? 0) }
     );
 
     if (firstResponse[1]) {
       return [null, firstResponse[1]];
     }
 
-    const response = firstResponse[0];
+    const response = firstResponse[0] as { totalResults?: number; results?: unknown[] } | null;
     if (!response) {
       return [[], null];
     }
@@ -1849,21 +1439,20 @@ class BulkIntakesClient {
 
     const pagesNeeded = Math.ceil(totalCount / limit);
     const parallelLimit = this.client.options.parallelLimit;
-
     const allResults: unknown[] = [...(response.results ?? [])];
 
     for (let i = 1; i < pagesNeeded; i += parallelLimit) {
       const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetBulkIntakesSuccessResponse>>[] = [];
+      const batchPromises: Promise<VintraceResult<unknown>>[] = [];
 
       for (let j = 0; j < batchSize; j++) {
         const offset = (i + j) * limit;
         batchPromises.push(
-          this.client.request<GetBulkIntakesSuccessResponse>(
-            'v7/operation/bulk-intakes',
+          this.client.request<unknown>(
+            'v7/operation/wine-batches',
             'GET',
-            { responseSchema: GetBulkIntakesSuccessResponseSchema },
-            { limit: String(limit), offset: String(offset) }
+            {},
+            { ...params, limit: String(limit), offset: String(offset) }
           )
         );
       }
@@ -1873,8 +1462,9 @@ class BulkIntakesClient {
         if (pageError) {
           return [null, pageError];
         }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
+        const pData = pageData as { results?: unknown[] } | null;
+        if (pData?.results) {
+          allResults.push(...pData.results);
         }
       }
     }
@@ -1883,165 +1473,10 @@ class BulkIntakesClient {
   }
 
   /**
-   * Create a bulk intake.
-   *
-   * Creates a new bulk intake in the system.
+   * Create a wine batch.
    */
-  post(data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>('v7/operation/bulk-intakes', 'POST', {}, data);
-  }
-
-  /**
-   * Partially update a bulk intake.
-   *
-   * Updates specific fields on a bulk intake.
-   */
-  patch(id: string, data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>(`v7/operation/bulk-intakes/${id}`, 'PATCH', {}, data);
-  }
-}
-
-export interface TrialBlendsListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class TrialBlendsClient {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all trial blends.
-   *
-   * Returns a paginated list of trial blends.
-   */
-  async getAll(params?: TrialBlendsListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetTrialBlendsSuccessResponse>(
-      'v7/operation/trial-blends',
-      'GET',
-      { responseSchema: GetTrialBlendsSuccessResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetTrialBlendsSuccessResponse>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetTrialBlendsSuccessResponse>(
-            'v7/operation/trial-blends',
-            'GET',
-            { responseSchema: GetTrialBlendsSuccessResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
-  }
-}
-
-export interface WorkOrdersV7ListParams {
-  limit?: number;
-  offset?: number;
-}
-
-class WorkOrdersV7Client {
-  constructor(private client: VintraceClient) {}
-
-  /**
-   * List all work orders.
-   *
-   * Returns a paginated list of work orders.
-   */
-  async getAll(params?: WorkOrdersV7ListParams): Promise<VintraceResult<unknown[]>> {
-    const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<GetWorkOrdersV7Response>(
-      'v7/operation/work-orders',
-      'GET',
-      { responseSchema: GetWorkOrdersV7ResponseSchema },
-      { limit: String(limit), offset: String(params?.offset ?? 0) }
-    );
-
-    if (firstResponse[1]) {
-      return [null, firstResponse[1]];
-    }
-
-    const response = firstResponse[0];
-    if (!response) {
-      return [[], null];
-    }
-
-    const totalCount = response.totalResults ?? response.results?.length ?? 0;
-    if (totalCount <= limit) {
-      return [response.results ?? [], null];
-    }
-
-    const pagesNeeded = Math.ceil(totalCount / limit);
-    const parallelLimit = this.client.options.parallelLimit;
-
-    const allResults: unknown[] = [...(response.results ?? [])];
-
-    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
-      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<GetWorkOrdersV7Response>>[] = [];
-
-      for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
-        batchPromises.push(
-          this.client.request<GetWorkOrdersV7Response>(
-            'v7/operation/work-orders',
-            'GET',
-            { responseSchema: GetWorkOrdersV7ResponseSchema },
-            { limit: String(limit), offset: String(offset) }
-          )
-        );
-      }
-
-      const batchResults = await Promise.all(batchPromises);
-      for (const [pageData, pageError] of batchResults) {
-        if (pageError) {
-          return [null, pageError];
-        }
-        if (pageData?.results) {
-          allResults.push(...pageData.results);
-        }
-      }
-    }
-
-    return [allResults, null];
+  create(data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/operation/wine-batches', 'POST', {}, data);
   }
 }
 
@@ -2064,8 +1499,13 @@ class TirageClient {
    *
    * Updates a tirage record.
    */
-  patch(operationId: string, data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>(`v7/operation/tirage/${operationId}`, 'PATCH', {}, data);
+  patch(operationId: string, data: unknown): Promise<VintraceResult<TirageSuccessResponse>> {
+    return this.client.request<TirageSuccessResponse>(
+      `v7/operation/tirage/${operationId}`,
+      'PATCH',
+      { responseSchema: TirageSuccessResponseSchema },
+      data
+    );
   }
 }
 
@@ -2084,6 +1524,198 @@ class BarrelsMovementsClient {
       { requestSchema: CreateBarrelsMovementRequestSchema },
       data
     );
+  }
+}
+
+class FruitIntakesClient {
+  constructor(private client: VintraceClient) {}
+
+  /**
+   * Create a fruit intake.
+   *
+   * Record a new fruit intake transaction.
+   */
+  create(data: unknown): Promise<VintraceResult<CreateFruitIntakeSuccessResponse>> {
+    return this.client.request<CreateFruitIntakeSuccessResponse>(
+      'v7/operation/fruit-intakes',
+      'POST',
+      { requestSchema: FruitIntakeRequestSchema, responseSchema: CreateFruitIntakeSuccessResponseSchema },
+      data
+    );
+  }
+
+  /**
+   * Update pricing for a fruit intake.
+   *
+   * Update the pricing related data for this fruit intake record.
+   */
+  updatePricing(
+    fruitIntakeId: string,
+    data: UpdateFruitIntakePricing
+  ): Promise<VintraceResult<UpdateFruitIntakePricingResponse>> {
+    return this.client.request<UpdateFruitIntakePricingResponse>(
+      `v7/operation/fruit-intakes/${fruitIntakeId}/pricing`,
+      'PUT',
+      { requestSchema: UpdateFruitIntakePricingSchema, responseSchema: UpdateFruitIntakePricingResponseSchema },
+      data
+    );
+  }
+
+  /**
+   * Update metrics for a fruit intake.
+   *
+   * Update the metrics for this fruit intake record.
+   */
+  updateMetrics(
+    fruitIntakeId: string,
+    data: UpdateMetrics
+  ): Promise<VintraceResult<UpdateMetricsResponse>> {
+    return this.client.request<UpdateMetricsResponse>(
+      `v7/operation/fruit-intakes/${fruitIntakeId}/metrics`,
+      'PUT',
+      { responseSchema: UpdateMetricsResponseSchema, requestSchema: UpdateMetricsSchema },
+      data
+    );
+  }
+}
+
+class DocumentsClient {
+  constructor(private client: VintraceClient) {}
+
+  /**
+   * Upload a file to an operation.
+   *
+   * Attach documents to a specified operation.
+   */
+  attach(data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/operation/operation/documents', 'PUT', {}, data);
+  }
+}
+
+export interface StockDispatchesListParams {
+  limit?: number;
+  offset?: number;
+}
+
+class StockClient {
+  constructor(private client: VintraceClient) {}
+
+  /**
+   * Receive stock.
+   *
+   * Perform a receive stock operation in the system.
+   */
+  receive(data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/stock/receivals', 'POST', {}, data);
+  }
+
+  /**
+   * Get all stock dispatches.
+   *
+   * Returns a paginated list of stock dispatch actions.
+   */
+  async getDispatches(params?: StockDispatchesListParams): Promise<VintraceResult<unknown[]>> {
+    const limit = params?.limit ?? 100;
+    const firstResponse = await this.client.request<unknown>(
+      'v7/stock/dispatches',
+      'GET',
+      {},
+      { ...params, limit: String(limit), offset: String(params?.offset ?? 0) }
+    );
+
+    if (firstResponse[1]) {
+      return [null, firstResponse[1]];
+    }
+
+    const response = firstResponse[0] as { totalResults?: number; results?: unknown[] } | null;
+    if (!response) {
+      return [[], null];
+    }
+
+    const totalCount = response.totalResults ?? response.results?.length ?? 0;
+    if (totalCount <= limit) {
+      return [response.results ?? [], null];
+    }
+
+    const pagesNeeded = Math.ceil(totalCount / limit);
+    const parallelLimit = this.client.options.parallelLimit;
+    const allResults: unknown[] = [...(response.results ?? [])];
+
+    for (let i = 1; i < pagesNeeded; i += parallelLimit) {
+      const batchSize = Math.min(parallelLimit, pagesNeeded - i);
+      const batchPromises: Promise<VintraceResult<unknown>>[] = [];
+
+      for (let j = 0; j < batchSize; j++) {
+        const offset = (i + j) * limit;
+        batchPromises.push(
+          this.client.request<unknown>(
+            'v7/stock/dispatches',
+            'GET',
+            {},
+            { ...params, limit: String(limit), offset: String(offset) }
+          )
+        );
+      }
+
+      const batchResults = await Promise.all(batchPromises);
+      for (const [pageData, pageError] of batchResults) {
+        if (pageError) {
+          return [null, pageError];
+        }
+        const pData = pageData as { results?: unknown[] } | null;
+        if (pData?.results) {
+          allResults.push(...pData.results);
+        }
+      }
+    }
+
+    return [allResults, null];
+  }
+}
+
+class VesselsClient {
+  constructor(private client: VintraceClient) {}
+
+  getBarrel(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/vessel/barrels/${id}`, 'GET');
+  }
+
+  getBarrelGroup(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/vessel/barrel-groups/${id}`, 'GET');
+  }
+
+  createTank(data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/vessel/tanks', 'POST', {}, data);
+  }
+
+  getTank(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/vessel/tanks/${id}`, 'GET');
+  }
+
+  getTanker(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/vessel/tankers/${id}`, 'GET');
+  }
+
+  getBin(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/vessel/bins/${id}`, 'GET');
+  }
+}
+
+class PurchaseOrdersClient {
+  constructor(private client: VintraceClient) {}
+
+  /**
+   * Create or update a purchase order.
+   */
+  create(data: unknown): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v7/account/purchase-orders', 'POST', {}, data);
+  }
+
+  /**
+   * Get purchase order details by id.
+   */
+  get(id: string): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>(`v7/account/purchase-orders/${id}`, 'GET');
   }
 }
 
@@ -2445,6 +2077,11 @@ class MrpStockClient {
   }
 }
 
+export interface StockLookupParams {
+  code?: string;
+  id?: string;
+}
+
 class InventoryClient {
   constructor(private client: VintraceClient) {}
 
@@ -2509,6 +2146,15 @@ class InventoryClient {
     }
 
     return [allResults, null];
+  }
+
+  /**
+   * Get stock item by code or id.
+   *
+   * Returns a single stock item by code or id.
+   */
+  lookup(params?: StockLookupParams): Promise<VintraceResult<unknown>> {
+    return this.client.request<unknown>('v6/stock/lookup', 'GET', {}, params);
   }
 }
 

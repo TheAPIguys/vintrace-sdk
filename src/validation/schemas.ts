@@ -780,6 +780,15 @@ const LiveMetricSchema = z.object({
   interfaceMappedName: z.string().optional(),
 });
 
+export const AnalysisResultSchema = z.object({
+  name: z.string(),
+  value: z.number().nullable().optional(),
+  interfaceMappedName: z.string().nullable().optional(),
+  nonNumericValue: z.string().nullable().optional(),
+});
+
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
+
 const SparklingInfoSchema = z.object({
   state: z.string().optional(),
 });
@@ -1117,9 +1126,10 @@ export const CreateFruitIntakeSuccessResponseSchema = z.object({
 });
 
 export const UpdateFruitIntakePricingSchema = z.object({
-  pricePerTon: z.number().optional(),
-  pricePerKg: z.number().optional(),
-  bypassed: z.boolean().optional(),
+  gross: MeasurementSchema.optional(),
+  tare: MeasurementSchema.optional(),
+  net: MeasurementSchema.optional(),
+  unitPrice: MeasurementSchema.optional(),
 });
 
 export const UpdateFruitIntakePricingResponseSchema = z.object({
@@ -1135,6 +1145,17 @@ export type UpdateFruitIntakePricing = z.infer<typeof UpdateFruitIntakePricingSc
 export type UpdateFruitIntakePricingResponse = z.infer<
   typeof UpdateFruitIntakePricingResponseSchema
 >;
+
+export const UpdateMetricsSchema = z.object({
+  metrics: z.array(AnalysisResultSchema).optional(),
+});
+
+export const UpdateMetricsResponseSchema = z.object({
+  data: UpdateMetricsSchema.optional(),
+});
+
+export type UpdateMetrics = z.infer<typeof UpdateMetricsSchema>;
+export type UpdateMetricsResponse = z.infer<typeof UpdateMetricsResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // Bulk Intakes

@@ -1,208 +1,65 @@
-# AGENTS.md - Vintrace SDK Development Guide
+# AGENTS.md
 
-This file provides guidance for agentic coding agents working on the vintrace-sdk codebase.
+This file captures non-obvious facts about vintrace-sdk that an agent is likely to miss without guidance.
 
----
-
-## 1. Commands
+## Commands
 
 ```bash
-pnpm build           # Build ESM + CJS bundles with tsup
-pnpm dev             # Watch mode
-pnpm typecheck       # TypeScript type checking
-pnpm lint            # ESLint on src/
-pnpm lint:fix        # Auto-fix ESLint issues
-pnpm format          # Format with Prettier
-pnpm test            # Run tests (watch mode)
-pnpm test run        # Run tests once
-pnpm test -- [file]  # Run single test file
-pnpm test -- -t "pattern"  # Run tests matching pattern
-pnpm generate-types  # Regenerate types from OpenAPI YAML
+pnpm build                       # Build ESM + CJS with tsup
+pnpm dev                         # Watch mode
+pnpm typecheck                   # tsc --noEmit (src/ only, excludes tests/)
+pnpm lint                        # ESLint on src/ only (not tests/)
+pnpm format                      # Prettier on src/**/*.ts (not tests/)
+pnpm test                        # Vitest watch mode
+pnpm test run                    # Vitest single run
+pnpm test -- tests/path/file.ts  # Run single test file
 ```
 
----
+## Pre-commit order (format → lint → typecheck → build)
 
-## 2. Project Structure
+`pnpm format` only touches `src/` files. `pnpm typecheck` excludes `tests/`. Build output goes to `dist/`.
 
-```
-src/
-├── client/          # VintraceClient, config, errors
-├── http/            # fetch.ts, pagination.ts
-├── types/           # generated.ts (DO NOT EDIT), result.ts
-├── validation/      # Zod schemas and validation utilities
-├── api/v6/          # v6 API modules (future)
-├── api/v7/          # v7 API modules (future)
-└── index.ts         # Main export
-```
+## Architecture
 
----
+- **All API clients live in a single file**: `src/client/VintraceClient.ts` (2724 lines). Private classes like `WorkOrdersClient`, `SalesOrdersClient`, etc. are defined there, exposed through `VintraceV6Api` / `VintraceV7Api` getters. Do NOT add files to `src/api/v6/` or `src/api/v7/` — those directories are empty/unused.
+- **Entrypoint**: `src/index.ts` re-exports `VintraceClient`, error classes, utility functions, and param/type interfaces.
+- **Validation**: Zod schemas in `src/validation/schemas.ts`. `validateRequest()` and `validateResponse()` live in `src/validation/index.ts` along with the `z` re-export.
+- **Error hierarchy**: `VintraceError` base class with `status`, `correlationId`, `body`. Subclasses: `VintraceAuthenticationError` (401), `VintraceNotFoundError` (404), `VintraceRateLimitError` (429, has `retryAfter`), `VintraceValidationError` (400/422), `VintraceServerError` (500+), `VintraceAggregateError` (batch operations).
+- **Batch helper**: `batchFetch()` in `src/client/utils.ts` — use instead of writing inline `Promise.allSettled` loops.
 
-## 3. Code Style
+## Result tuple convention
 
-- **Formatting**: Semi-colons, single quotes, print width 100, ES5 trailing commas
-- **Arrow functions**: `(x) => x` for single param
-- **ESLint**: No unused variables, no floating promises, no explicit `any`
-- **Console**: Only `warn` and `error` allowed
-
----
-
-## 4. TypeScript Guidelines
-
-- Prefer explicit return types: `function getUser(id: string): Promise<VintraceResult<User>>`
-- API responses use result tuples - destructure at call site
-- Use interfaces for public APIs
-
----
-
-## 5. Naming Conventions
-
-- Classes: PascalCase (`VintraceClient`)
-- Methods: camelCase (`getAll()`)
-- Files: kebab-case (`vintrace-client.ts`)
-- Constants: UPPER_SNAKE_CASE (`DEFAULT_OPTIONS`)
-
----
-
-## 6. Import Order
-
-1. External libraries (zod, etc.)
-2. Internal packages (absolute paths from 'vintrace-sdk')
-3. Relative imports
-
----
-
-## 7. Error Handling - Go-Style Result Tuples
-
-Every API method returns `[data, error]` - NO throwing:
+Every API method returns `[data, error]` — never throws:
 
 ```typescript
 const [order, error] = await client.v6.workOrders.get('123');
-if (error) {
-  if (error instanceof VintraceAuthenticationError) { /* auth failed */ }
-  else if (error instanceof VintraceRateLimitError) { /* check error.retryAfter */ }
-  else if (error instanceof VintraceNotFoundError) { /* not found */ }
-  else { /* generic - check error.status, error.correlationId */ }
-  return;
-}
-console.log(order.id); // order is typed, never null
+if (error) return;
 ```
 
-### Creating New Errors
-```typescript
-export class VintraceTimeoutError extends VintraceError {
-  constructor(correlationId?: string) {
-    super('Request timeout', 408, correlationId);
-    this.name = 'VintraceTimeoutError';
-  }
-}
-```
+`VintraceResult<T>` = `[data: T, error: null] | [data: null, error: VintraceError] | [data: null, error: null]`.
 
----
+## Key method patterns
 
-## 8. Adding New API Modules
+- List endpoints `getAll()` return full array via result tuple after auto-paginating internally. They are NOT async generators — DO NOT use `for await` on them.
+- `getMany(ids)` uses `batchFetch()` from `utils.ts` returning `VintraceAggregateError` on partial failure.
+- `create(data)` → POST. `update(id, data)` → PUT. `updateFields(data)` → POST to a different endpoint. `patch(id, data)` → PATCH.
+- Some modules have extra methods: `workOrders.getByCode()`, `parties.getByName()`, `salesOrders.getByCode()`, `workOrders.assign()`, `workOrders.submit()`.
+- `ProductAnalysisClient` and `ProductJobsClient` are separate from `ProductsClient` — they use numeric product IDs.
 
-```typescript
-class WorkOrdersClient {
-  constructor(private client: VintraceClient) {}
+## Tests
 
-  getAll(params?: Record<string, unknown>) {
-    return this.client.request<WorkOrder[]>('v6/workorders/list', 'GET', {}, params);
-  }
+- **Unit tests** in `tests/unit/` mock `fetch` via `vi.stubGlobal`.
+- **Integration tests** in `tests/integration/` require `.env` with `VINTRACE_BASE_URL`, `VINTRACE_ORG`, `VINTRACE_TOKEN`. Run: `npx vitest run tests/integration/real.integration.test.ts --env-file=.env`. They are read-only (GET only).
+- **Fixtures** in `tests/fixtures/`.
 
-  get(id: string) {
-    return this.client.request<WorkOrder>(`v6/workorders/${id}`, 'GET`);
-  }
+## Prettier quirks
 
-  getMany<T>(ids: string[]): Promise<VintraceResult<T[]>> {
-    return this.batchGet<T>(ids, (id) => this.get(id));
-  }
+Config in `.prettierrc`: `arrowParens: "always"`, `endOfLine: "lf"` (relevant on Windows where git may convert to CRLF), no `.prettierignore` — format only runs on `src/**/*.ts`.
 
-  post(data: unknown) {
-    return this.client.request<WorkOrder>('v6/workorders', 'POST', {}, data);
-  }
+## Config notes
 
-  update(id: string, data: unknown) {
-    return this.client.request<WorkOrder>(`v6/workorders/${id}`, 'PATCH', {}, data);
-  }
-
-  private async batchGet<T>(ids: string[], fetchFn: (id: string) => Promise<VintraceResult<T>>): Promise<VintraceResult<T[]>> {
-    const results = await Promise.allSettled(ids.map((id) => fetchFn(id)));
-    const errors: VintraceError[] = [];
-    const data: T[] = [];
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        const [item, error] = result.value;
-        if (error) errors.push(error);
-        else if (item !== null) data.push(item);
-      } else {
-        errors.push(new VintraceError(result.reason?.message ?? 'Unknown error', 0));
-      }
-    }
-    if (errors.length > 0) return [null, new VintraceAggregateError(errors)];
-    return [data, null];
-  }
-}
-```
-
----
-
-## 9. Generated Types & Validation
-
-- `src/types/generated.ts` - auto-generated, **DO NOT EDIT**
-- `src/validation/schemas.ts` - manual Zod schemas
-- Use `validateRequest()` and `validateResponse()` from `src/validation/index.ts`
-
----
-
-## 10. Testing
-
-```typescript
-import { describe, it, expect, vi } from 'vitest';
-
-describe('VintraceClient', () => {
-  it('should create client with config', () => {
-    const client = new VintraceClient({
-      baseUrl: 'https://test.vintrace.net',
-      organization: 'test',
-      token: 'test-token',
-    });
-    expect(client.baseUrl).toBe('https://test.vintrace.net');
-  });
-});
-```
-
-Mock fixtures go in `tests/fixtures/`.
-
----
-
-## 11. Common Patterns
-
-### Pagination
-```typescript
-for await (const item of client.v6.workOrders.getAll({ status: 'READY' })) {
-  console.log(item);
-}
-```
-
-### Batch Requests
-```typescript
-const [results, error] = await client.v6.workOrders.getMany(['id1', 'id2', 'id3']);
-if (error) { /* handle VintraceAggregateError */ }
-```
-
----
-
-## 12. Before Committing
-
-- [ ] `pnpm format`
-- [ ] `pnpm lint`
-- [ ] `pnpm typecheck`
-- [ ] `pnpm build`
-
----
-
-## 13. Package Details
-
-- **Main**: `dist/index.cjs` (CJS), `dist/index.js` (ESM)
-- **Types**: `dist/index.d.ts`
-- **Node**: >=18.0.0
+- Node >= 18 (engines field)
+- `tsconfig.json`: `rootDir: "./src"`, `outDir: "./dist"`, `strict: true`, excludes `tests/`
+- `eslint.config.js`: only lints `src/`, ignores `dist/`, `node_modules/`, `*.cjs`
+- `tsup.config.ts`: entry `src/index.ts`, formats `['esm', 'cjs']`, `dts: true`, `sourcemap: true`, `clean: true`
+- `.gitignore` includes `scratch.ts` (handy scratchpad file) and `nul` (Windows quirk). `dist/` is always rebuilt, never committed.

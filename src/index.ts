@@ -17,7 +17,7 @@ export {
   validateResponse,
   VintraceValidationSchemaError,
 } from './validation/index';
-export {
+export type {
   WorkOrderListParams,
   SalesOrderListParams,
   RefundListParams,
@@ -25,6 +25,9 @@ export {
   ProductListParams,
   VesselDetailsReportParams,
   CostsBusinessUnitTransactionsParams,
+  StockLookupParams,
+  WineBatchesListParams,
+  StockDispatchesListParams,
 } from './client/VintraceClient';
 export type {
   TransactionSearchParams,

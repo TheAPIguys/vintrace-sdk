@@ -1,9 +1,14 @@
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const tsconfigPath = join(__dirname, 'tsconfig.json');
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', '**/*.cjs', 'src/types/generated.ts'],
+    ignores: ['dist/**', 'node_modules/**', '**/*.cjs'],
   },
   {
     files: ['src/**/*.ts'],
@@ -12,7 +17,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: 'module',
-        project: './tsconfig.json',
+        project: tsconfigPath,
       },
       globals: {
         process: 'readonly',
