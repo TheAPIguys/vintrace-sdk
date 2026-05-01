@@ -95,7 +95,7 @@ describe('VintraceClient v7 - FruitIntakes', () => {
     it('calls the correct endpoint with fruitIntakeId', async () => {
       mockFetch(200, {});
       const client = makeClient();
-      await client.v7.fruitIntakes.updateMetrics('123', { brix: 22.5 });
+      await client.v7.fruitIntakes.updateMetrics('123', { metrics: [{ name: 'brix', value: 22.5 }] });
       const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
       expect(url).toBe(`${BASE_URL}/${ORG}/api/v7/operation/fruit-intakes/123/metrics`);
       expect(init.method).toBe('PUT');
