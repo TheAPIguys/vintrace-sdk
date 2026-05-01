@@ -17,7 +17,7 @@ export {
   validateResponse,
   VintraceValidationSchemaError,
 } from './validation/index';
-export {
+export type {
   WorkOrderListParams,
   SalesOrderListParams,
   RefundListParams,
