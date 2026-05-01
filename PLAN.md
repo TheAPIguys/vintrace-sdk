@@ -56,18 +56,17 @@ Missing features identified by comparing `vintrace-v6-apis.yaml` and `vintrace-a
 - [ ] **`PurchaseOrdersClient.create()`** — Wire response schema
 - [ ] **`PurchaseOrdersClient.get()`** — Wire response schema
 
-## Missing classes (referenced by VintraceV7Api getters but never defined)
+## v7 endpoints not yet implemented (from OpenAPI spec, no VintraceV7Api getter wired)
 
-- [ ] **`AssessmentsClient`** — Create with `getAll()` (wire `GetAssessmentsResponseSchema`), `get()`, `getMany()`
-- [ ] **`VineyardsClient`** — Create class
-- [ ] **`MaturitySamplesClient`** — Create class
-- [ ] **`PartiesV7Client`** — Create with `getAll()` (wire `GetPartiesV7ResponseSchema`), `get()`, `getMany()`
-- [ ] **`ShipmentsClient`** — Create with `getAll()` (wire `GetShipmentsSuccessResponseSchema`), `get()`, `getMany()`
-- [ ] **`BarrelTreatmentsClient`** — Create with `getAll()` (wire `GetBarrelTreatmentsSuccessResponseSchema`), `get()`, `getMany()`
-- [x] **`FruitIntakesClient`** — Created with `create()`, `updatePricing()` (PUT), `updateMetrics()` (PUT). All wired with schemas.
-- [ ] **`BulkIntakesClient`** — Create with `getAll()` (wire `GetBulkIntakesSuccessResponseSchema`), `get()`, `getMany()`
-- [ ] **`TrialBlendsClient`** — Create with `getAll()` (wire `GetTrialBlendsSuccessResponseSchema`), `get()`, `getMany()`
-- [ ] **`WorkOrdersV7Client`** — Create with `getAll()` (wire `GetWorkOrdersV7ResponseSchema`), `get()`, `getMany()`
+- [ ] `POST/PUT /v7/harvest/assessments` — AssessmentsClient
+- [ ] `POST/GET /v7/harvest/vineyards` — VineyardsClient
+- [ ] `POST /v7/harvest/maturity-samples` — MaturitySamplesClient
+- [ ] `GET/POST /v7/identity/parties` — PartiesV7Client
+- [ ] `GET /v7/operation/shipments` — ShipmentsClient
+- [ ] `GET /v7/operation/barrel-treatments` — BarrelTreatmentsClient
+- [ ] `POST/GET /v7/operation/bulk-intakes` — BulkIntakesClient
+- [ ] `GET /v7/operation/trial-blends` — TrialBlendsClient
+- [ ] `GET /v7/operation/work-orders` — WorkOrdersV7Client
 
 ## Already wired with schemas ✅
 

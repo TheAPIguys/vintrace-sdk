@@ -780,6 +780,15 @@ const LiveMetricSchema = z.object({
   interfaceMappedName: z.string().optional(),
 });
 
+export const AnalysisResultSchema = z.object({
+  name: z.string(),
+  value: z.number().nullable().optional(),
+  interfaceMappedName: z.string().nullable().optional(),
+  nonNumericValue: z.string().nullable().optional(),
+});
+
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
+
 const SparklingInfoSchema = z.object({
   state: z.string().optional(),
 });
@@ -1138,14 +1147,7 @@ export type UpdateFruitIntakePricingResponse = z.infer<
 >;
 
 export const UpdateMetricsSchema = z.object({
-  metrics: z
-    .array(
-      z.object({
-        name: z.string(),
-        value: z.number(),
-      })
-    )
-    .optional(),
+  metrics: z.array(AnalysisResultSchema).optional(),
 });
 
 export const UpdateMetricsResponseSchema = z.object({
