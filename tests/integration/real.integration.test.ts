@@ -138,9 +138,10 @@ describe.skipIf(!hasCredentials)('real API — read-only integration', { timeout
       expect(typeof data!.state).toBe('string');
       expect(typeof data!.fulfillment).toBe('string');
       expect(data!.inactive).toBe(false);
-      expect(Array.isArray(data!.lines)).toBe(true);
-      if (data!.lines.length > 0) {
-        const line = data!.lines[0];
+      const lines = data!.lines ?? [];
+      expect(Array.isArray(lines)).toBe(true);
+      if (lines.length > 0) {
+        const line = lines[0];
         expect(typeof line.id).toBe('number');
         expect(typeof line.type).toBe('string');
         expect(line.quantityOrdered).toBeDefined();
