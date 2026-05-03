@@ -3,10 +3,12 @@ import { z } from 'zod';
 export const ExtIdentifiableEntitySchema = z.object({
   id: z.number().optional(),
   extId: z.string().optional(),
+  name: z.string().optional(),
 });
 
 export const IdentifiableEntitySchema = z.object({
   id: z.number().optional(),
+  name: z.string().optional(),
 });
 
 export const CodedIdentifiableEntitySchema = z.object({
@@ -643,16 +645,101 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
     results: z.array(itemSchema).optional(),
   });
 
+export const VineyardIdentifiableEntitySchema = IdentifiableEntitySchema.extend({
+  name: z.string(),
+  grower: ExtIdentifiableEntitySchema,
+});
+
+export const GradingSchema = z.object({
+  id: z.number().optional(),
+  value: z.string().optional(),
+  scaleName: z.string().optional(),
+  scaleId: z.number().optional(),
+});
+
+export const BulkStockSchema = z.object({
+  totalVolume: VolumeSchema.optional(),
+  equivalentVolume: VolumeSchema.optional(),
+  equivalentWeight: VolumeSchema.optional(),
+  compWeighting: z.number().optional(),
+  percentageOfFruit: z.number().optional(),
+  batchId: z.number().optional(),
+  batchName: z.string().optional(),
+  grading: GradingSchema.nullable().optional(),
+});
+
+export const FruitPlacementSchema = z.object({
+  vintage: z.string().optional(),
+  bulkStocks: z.array(BulkStockSchema).optional(),
+});
+
 export const BlockDataSchema = z.object({
   id: z.number(),
   code: z.string().optional(),
-  name: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string(),
   extId: z.string().optional(),
   inactive: z.boolean().optional(),
+  description: z.string().optional(),
+  rowNumbers: z.string().optional(),
+  estate: z.boolean().optional(),
+  grower: ExtIdentifiableEntitySchema.optional(),
+  vineyard: VineyardIdentifiableEntitySchema.optional(),
+  region: IdentifiableEntitySchema.optional(),
+  subRegion: IdentifiableEntitySchema.optional(),
+  variety: IdentifiableEntitySchema.optional(),
+  intendedUse: IdentifiableEntitySchema.optional(),
+  grading: GradingSchema.nullable().optional(),
+  fruitPlacement: FruitPlacementSchema.optional(),
 });
 
 export const GetBlocksSuccessResponseSchema = PaginatedResponseSchema(BlockDataSchema);
+
+export const BlockSchema = ExtIdentifiableEntitySchema.extend({
+  extId: z.string(),
+  name: z.string(),
+  estate: z.boolean().optional(),
+  vineyard: VineyardIdentifiableEntitySchema,
+  variety: IdentifiableEntitySchema,
+  countyCode: z.string().optional(),
+  inactive: z.boolean().optional(),
+  noOfVines: z.number().optional(),
+  area: z.number().optional(),
+  rootStock: IdentifiableEntitySchema.optional(),
+  clone: IdentifiableEntitySchema.optional(),
+  vineSpacing: z.string().optional(),
+  rowSpacing: z.string().optional(),
+  soilProfile: z.string().optional(),
+  trellis: IdentifiableEntitySchema.optional(),
+  aspect: z.string().optional(),
+  plantedTime: z.number().optional(),
+  pruningType: z.string().optional(),
+  averageGradient: z.number().optional(),
+  irrigationType: z.string().optional(),
+  frostProtection: z.string().optional(),
+  organic: z.boolean().optional(),
+  organicCertifiedTime: z.number().optional(),
+  township: z.string().optional(),
+  range: z.string().optional(),
+  section: z.string().optional(),
+  emitterRate: z.number().optional(),
+  emitterSize: z.string().optional(),
+  siteId: z.string().optional(),
+  noOfRows: z.number().optional(),
+  districtCode: z.string().optional(),
+  regionalAdminCode: z.string().optional(),
+  comments: z.string().optional(),
+  code: z.string().optional(),
+  defaultHarvestMethod: z.string().optional(),
+  description: z.string().optional(),
+  graftedDate: z.number().optional(),
+  intendedUse: IdentifiableEntitySchema.optional(),
+  rowNumbers: z.string().optional(),
+  vineStructure: IdentifiableEntitySchema.optional(),
+});
+
+export const BlockResponseSchema = z.object({
+  data: BlockSchema,
+});
 
 // ---------------------------------------------------------------------------
 // v6-style paginated responses: totalResultCount + first/max params
@@ -686,6 +773,12 @@ export const SearchListResponseSchema = V6PaginatedResponseSchema;
 
 export type GetBlocksSuccessResponse = z.infer<typeof GetBlocksSuccessResponseSchema>;
 export type BlockData = z.infer<typeof BlockDataSchema>;
+export type Block = z.infer<typeof BlockSchema>;
+export type BlockResponse = z.infer<typeof BlockResponseSchema>;
+export type VineyardIdentifiableEntity = z.infer<typeof VineyardIdentifiableEntitySchema>;
+export type Grading = z.infer<typeof GradingSchema>;
+export type BulkStock = z.infer<typeof BulkStockSchema>;
+export type FruitPlacement = z.infer<typeof FruitPlacementSchema>;
 export type InventoryResponse = z.infer<typeof InventoryResponseSchema>;
 export type TransactionSearchResponse = z.infer<typeof TransactionSearchResponseSchema>;
 export type IntakeOperationSearchResponse = z.infer<typeof IntakeOperationSearchResponseSchema>;
@@ -707,7 +800,7 @@ const WinerySchema = z.object({
   businessUnit: z.string().optional(),
 });
 
-const GradingSchema = z.object({
+const VesselGradingSchema = z.object({
   scaleId: z.number().optional(),
   scaleName: z.string().optional(),
   valueId: z.number().optional(),
@@ -725,7 +818,7 @@ const WineBatchDetailsSchema = z.object({
   program: z.string().optional(),
   productCategory: CodedIdentifiableEntitySchema.optional(),
   designatedProduct: CodedIdentifiableEntitySchema.optional(),
-  grading: GradingSchema.optional(),
+  grading: VesselGradingSchema.optional(),
 });
 
 const ProductStateSchema = z.object({

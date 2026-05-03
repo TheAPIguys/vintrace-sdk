@@ -28,6 +28,7 @@ export type {
   StockLookupParams,
   WineBatchesListParams,
   StockDispatchesListParams,
+  BlocksListParams,
 } from './client/VintraceClient';
 export type {
   TransactionSearchParams,
@@ -47,4 +48,6 @@ export type {
   CompositionComponent,
   PurchaseOrder,
   PurchaseOrderLine,
+  BlockData,
+  Block,
 } from './validation/schemas';

@@ -156,4 +156,30 @@ describe.skipIf(!hasCredentials)('real API — read-only integration', { timeout
       expect(error).not.toBeNull();
     });
   });
+
+  // ── Blocks (v7) ──────────────────────────────────────────────────────────────
+  describe('v7.blocks', () => {
+    it('getAll() with fruitPlacements and vintage returns typed data', async () => {
+      const [data, error] = await client.v7.blocks.getAll({ include: 'fruitPlacements', vintage: '2026', limit: 5 });
+      expect(error).toBeNull();
+      expect(data).toBeDefined();
+      expect(Array.isArray(data)).toBe(true);
+      if (data && data.length > 0) {
+        const block = data[0];
+        expect(typeof block.id).toBe('number');
+        expect(typeof block.name).toBe('string');
+        if (block.grower) {
+          expect(block.grower.id).toBeDefined();
+        }
+        if (block.vineyard) {
+          expect(block.vineyard.id).toBeDefined();
+          expect(block.vineyard.name).toBeDefined();
+        }
+        if (block.region) {
+          expect(block.region.id).toBeDefined();
+          expect(block.region.name).toBeDefined();
+        }
+      }
+    });
+  });
 });
