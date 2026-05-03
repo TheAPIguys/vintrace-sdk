@@ -3,10 +3,12 @@ import { z } from 'zod';
 export const ExtIdentifiableEntitySchema = z.object({
   id: z.number().optional(),
   extId: z.string().optional(),
+  name: z.string().optional(),
 });
 
 export const IdentifiableEntitySchema = z.object({
   id: z.number().optional(),
+  name: z.string().optional(),
 });
 
 export const CodedIdentifiableEntitySchema = z.object({
@@ -643,16 +645,95 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
     results: z.array(itemSchema).optional(),
   });
 
+export const VineyardIdentifiableEntitySchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  grower: ExtIdentifiableEntitySchema.optional(),
+});
+
+export const GradingSchema = z.object({
+  id: z.number().optional(),
+  value: z.string().optional(),
+  scaleName: z.string().optional(),
+  scaleId: z.number().optional(),
+});
+
+export const BulkStockSchema = z.object({
+  id: z.number().optional(),
+  productId: z.number().optional(),
+  productName: z.string().optional(),
+  vintage: z.string().optional(),
+  volume: VolumeSchema.optional(),
+  percentage: z.number().optional(),
+});
+
+export const FruitPlacementSchema = z.object({
+  vintage: z.string().optional(),
+  bulkStocks: z.array(BulkStockSchema).optional(),
+});
+
 export const BlockDataSchema = z.object({
   id: z.number(),
   code: z.string().optional(),
-  name: z.string().optional(),
-  description: z.string().optional(),
+  name: z.string(),
   extId: z.string().optional(),
   inactive: z.boolean().optional(),
+  description: z.string().optional(),
+  rowNumbers: z.string().optional(),
+  estate: z.string().optional(),
+  grower: ExtIdentifiableEntitySchema.optional(),
+  vineyard: VineyardIdentifiableEntitySchema.optional(),
+  region: IdentifiableEntitySchema.optional(),
+  subRegion: IdentifiableEntitySchema.optional(),
+  variety: IdentifiableEntitySchema.optional(),
+  intendedUse: IdentifiableEntitySchema.optional(),
+  grading: GradingSchema.nullable().optional(),
+  fruitPlacement: FruitPlacementSchema.optional(),
 });
 
 export const GetBlocksSuccessResponseSchema = PaginatedResponseSchema(BlockDataSchema);
+
+export const BlockSchema = BlockDataSchema.extend({
+  area: z.number().optional(),
+  areaUnit: z.string().optional(),
+  colour: z.string().optional(),
+  source: z.string().optional(),
+  sourceId: z.string().optional(),
+  externalId: z.string().optional(),
+  blockType: z.string().optional(),
+  directionFaced: z.string().optional(),
+  aspect: z.string().optional(),
+  slope: z.string().optional(),
+  elevation: z.number().optional(),
+  soilType: z.string().optional(),
+  drainage: z.string().optional(),
+  irrigation: z.string().optional(),
+  trellisSystem: z.string().optional(),
+  rootstock: z.string().optional(),
+  clone: z.string().optional(),
+  plantingDate: z.number().optional(),
+  plantingDateAsText: z.string().optional(),
+  rowOrientation: z.string().optional(),
+  rowSpacing: z.number().optional(),
+  vineSpacing: z.number().optional(),
+  totalVines: z.number().optional(),
+  totalArea: z.number().optional(),
+  totalAreaUnit: z.string().optional(),
+  established: z.number().optional(),
+  organic: z.boolean().optional(),
+  biodynamic: z.boolean().optional(),
+  sustainable: z.boolean().optional(),
+  certified: z.boolean().optional(),
+  notes: z.string().optional(),
+  createdDate: z.number().optional(),
+  createdDateAsText: z.string().optional(),
+  modifiedDate: z.number().optional(),
+  modifiedDateAsText: z.string().optional(),
+});
+
+export const BlockResponseSchema = z.object({
+  data: BlockSchema,
+});
 
 // ---------------------------------------------------------------------------
 // v6-style paginated responses: totalResultCount + first/max params
@@ -686,6 +767,12 @@ export const SearchListResponseSchema = V6PaginatedResponseSchema;
 
 export type GetBlocksSuccessResponse = z.infer<typeof GetBlocksSuccessResponseSchema>;
 export type BlockData = z.infer<typeof BlockDataSchema>;
+export type Block = z.infer<typeof BlockSchema>;
+export type BlockResponse = z.infer<typeof BlockResponseSchema>;
+export type VineyardIdentifiableEntity = z.infer<typeof VineyardIdentifiableEntitySchema>;
+export type Grading = z.infer<typeof GradingSchema>;
+export type BulkStock = z.infer<typeof BulkStockSchema>;
+export type FruitPlacement = z.infer<typeof FruitPlacementSchema>;
 export type InventoryResponse = z.infer<typeof InventoryResponseSchema>;
 export type TransactionSearchResponse = z.infer<typeof TransactionSearchResponseSchema>;
 export type IntakeOperationSearchResponse = z.infer<typeof IntakeOperationSearchResponseSchema>;
@@ -707,7 +794,7 @@ const WinerySchema = z.object({
   businessUnit: z.string().optional(),
 });
 
-const GradingSchema = z.object({
+const VesselGradingSchema = z.object({
   scaleId: z.number().optional(),
   scaleName: z.string().optional(),
   valueId: z.number().optional(),
@@ -725,7 +812,7 @@ const WineBatchDetailsSchema = z.object({
   program: z.string().optional(),
   productCategory: CodedIdentifiableEntitySchema.optional(),
   designatedProduct: CodedIdentifiableEntitySchema.optional(),
-  grading: GradingSchema.optional(),
+  grading: VesselGradingSchema.optional(),
 });
 
 const ProductStateSchema = z.object({

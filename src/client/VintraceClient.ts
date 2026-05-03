@@ -51,6 +51,8 @@ import type {
   TirageSuccessResponse,
   BarrelsMovement,
   BlockData,
+  Block,
+  BlockResponse,
   TransactionDetails,
   PurchaseOrder,
   PurchaseOrderResponse,
@@ -99,6 +101,7 @@ import {
   CreateBarrelsMovementRequestSchema,
   FruitIntakeRequestSchema,
   PurchaseOrderResponseSchema,
+  BlockResponseSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -180,6 +183,14 @@ export interface VesselDetailsReportParams {
   wineryId?: number;
   wineryName?: string;
   vesselType?: 'TANK' | 'BIN' | 'BARREL' | 'BARREL_GROUP' | 'BIN_GROUP' | 'PRESS' | 'TANKER';
+}
+
+export interface BlocksListParams {
+  include?: string;
+  vintage?: string;
+  VintraceEntityIds?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export class VintraceClient {
@@ -1100,13 +1111,19 @@ class BlocksClient {
    *
    * API consumer can use the include and vintage query params to request including more information in the response.
    */
-  async getAll(params?: Record<string, unknown>): Promise<VintraceResult<BlockData[]>> {
-    const limit = params?.limit ? parseInt(String(params.limit), 10) : 100;
+  async getAll(params?: BlocksListParams): Promise<VintraceResult<BlockData[]>> {
+    const limit = params?.limit ?? 100;
+    const queryParams: Record<string, string> = { limit: String(limit), offset: '0' };
+    if (params?.include) queryParams.include = params.include;
+    if (params?.vintage) queryParams.vintage = params.vintage;
+    if (params?.VintraceEntityIds) queryParams.VintraceEntityIds = params.VintraceEntityIds;
+    if (params?.offset) queryParams.offset = String(params.offset);
+
     const firstResponse = await this.client.request<GetBlocksSuccessResponse>(
       'v7/harvest/blocks',
       'GET',
       { responseSchema: GetBlocksSuccessResponseSchema },
-      { ...params, limit: String(limit), offset: '0' }
+      queryParams
     );
 
     if (firstResponse[1]) {
@@ -1133,13 +1150,14 @@ class BlocksClient {
       const batchPromises: Promise<VintraceResult<GetBlocksSuccessResponse>>[] = [];
 
       for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
+        const pageOffset = (i + j) * limit;
+        const pageParams: Record<string, string> = { ...queryParams, offset: String(pageOffset) };
         batchPromises.push(
           this.client.request<GetBlocksSuccessResponse>(
             'v7/harvest/blocks',
             'GET',
             { responseSchema: GetBlocksSuccessResponseSchema },
-            { ...params, limit: String(limit), offset: String(offset) }
+            pageParams
           )
         );
       }
@@ -1158,34 +1176,22 @@ class BlocksClient {
     return [allResults, null];
   }
 
-  get(id: string) {
-    /**
-     * Get a single block by id.
-     *
-     * Retrieve a single block by its id. The API supports fetching a subset of
-     * fields by using query params such as `include` and `vintage` (see server docs).
-     * Path parameter `id` is the numeric/internal identifier for the block.
-     */
-    return this.client.request<unknown>(`v7/harvest/blocks/${id}`, 'GET');
-  }
-
-  getMany(ids: string[]): Promise<VintraceResult<unknown[]>> {
-    /**
-     * Get multiple blocks by ids.
-     *
-     * Batch fetch multiple blocks by their IDs. Returns VintraceAggregateError if any request fails.
-     */
-    return batchFetch(ids, (id) => this.get(id));
-  }
-
-  post(data: unknown) {
-    /**
-     * Upsert block data into system.
-     *
-     * Create or update block data in the system. Provide a Block object in `data`.
-     * Example fields: `extId`, `name`, `estate`, `vineyard`, `variety`, `area`.
-     */
-    return this.client.request<unknown>('v7/harvest/blocks', 'POST', {}, data);
+  /**
+   * Upsert block data into system.
+   *
+   * Create or update block data in the system. Provide a Block object in `data`.
+   * Example fields: `extId`, `name`, `estate`, `vineyard`, `variety`, `area`.
+   */
+  async post(data: unknown): Promise<VintraceResult<Block>> {
+    const [response, error] = await this.client.request<BlockResponse>(
+      'v7/harvest/blocks',
+      'POST',
+      { responseSchema: BlockResponseSchema },
+      data
+    );
+    if (error) return [null, error];
+    if (!response?.data) return [null, null];
+    return [response.data, null];
   }
 
   patch(id: string, data: unknown) {
