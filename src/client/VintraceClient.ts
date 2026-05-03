@@ -1199,7 +1199,12 @@ class BlocksClient {
    * Create or update assessment data for a block by its blockId.
    */
   createAssessment(blockId: string, data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>(`v7/harvest/blocks/${blockId}/assessments`, 'POST', {}, data);
+    return this.client.request<unknown>(
+      `v7/harvest/blocks/${blockId}/assessments`,
+      'POST',
+      {},
+      data
+    );
   }
 }
 
@@ -1396,7 +1401,6 @@ class CostsClient {
 
     return [allResults, null];
   }
-
 }
 
 export interface WineBatchesListParams {
@@ -1539,7 +1543,10 @@ class FruitIntakesClient {
     return this.client.request<CreateFruitIntakeSuccessResponse>(
       'v7/operation/fruit-intakes',
       'POST',
-      { requestSchema: FruitIntakeRequestSchema, responseSchema: CreateFruitIntakeSuccessResponseSchema },
+      {
+        requestSchema: FruitIntakeRequestSchema,
+        responseSchema: CreateFruitIntakeSuccessResponseSchema,
+      },
       data
     );
   }
@@ -1556,7 +1563,10 @@ class FruitIntakesClient {
     return this.client.request<UpdateFruitIntakePricingResponse>(
       `v7/operation/fruit-intakes/${fruitIntakeId}/pricing`,
       'PUT',
-      { requestSchema: UpdateFruitIntakePricingSchema, responseSchema: UpdateFruitIntakePricingResponseSchema },
+      {
+        requestSchema: UpdateFruitIntakePricingSchema,
+        responseSchema: UpdateFruitIntakePricingResponseSchema,
+      },
       data
     );
   }
