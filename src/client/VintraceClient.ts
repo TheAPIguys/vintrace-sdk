@@ -250,6 +250,8 @@ export class VintraceClient {
         maxRetries: options?.maxRetries ?? this.options.maxRetries,
         validateRequest: options?.validateRequest ?? this.options.validateRequests,
         validateResponse: options?.validateResponse ?? this.options.validateResponses,
+        responseSchema: options?.responseSchema,
+        requestSchema: options?.requestSchema,
       },
       body
     );

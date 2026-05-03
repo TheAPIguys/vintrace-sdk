@@ -48,10 +48,10 @@ describe('v7.fruitIntakes', () => {
 
   describe('updatePricing()', () => {
     it('calls PUT v7/operation/fruit-intakes/:id/pricing with data', async () => {
-      const mockResponse = { data: { pricePerTon: 1200, bypassed: false } };
+      const mockResponse = { data: { unitPrice: { value: 1200, unit: 'tonne' } } };
       stubFetch(200, mockResponse);
       const client = makeClient();
-      const payload = { pricePerTon: 1200 };
+      const payload = { unitPrice: { value: 1200, unit: 'tonne' } };
       const [data, error] = await client.v7.fruitIntakes.updatePricing('42', payload);
       expect(error).toBeNull();
       expect(data).toEqual(mockResponse);

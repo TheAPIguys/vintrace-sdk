@@ -66,12 +66,12 @@ describe('v7.purchaseOrders', () => {
       expect(error).not.toBeNull();
     });
 
-    it('returns [null,null] when response body is empty', async () => {
+    it('returns validation error when response body is empty', async () => {
       stubFetch(200, {});
       const client = makeClient();
       const [data, error] = await client.v7.purchaseOrders.get('1');
       expect(data).toBeNull();
-      expect(error).toBeNull();
+      expect(error).not.toBeNull();
     });
   });
 });
