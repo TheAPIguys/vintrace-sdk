@@ -126,4 +126,33 @@ describe.skipIf(!hasCredentials)('real API — read-only integration', { timeout
       expect(data).toBeDefined();
     });
   });
+
+  // ── Purchase Orders ─────────────────────────────────────────────────────────
+  describe('v7.purchaseOrders', () => {
+    it('get() returns purchase order 6000 with expected shape', async () => {
+      const [data, error] = await client.v7.purchaseOrders.get('6000');
+      expect(error).toBeNull();
+      expect(data).toBeDefined();
+      expect(data!.id).toBe(6000);
+      expect(data!.name).toBe('VPO5886');
+      expect(typeof data!.state).toBe('string');
+      expect(typeof data!.fulfillment).toBe('string');
+      expect(data!.inactive).toBe(false);
+      expect(Array.isArray(data!.lines)).toBe(true);
+      if (data!.lines.length > 0) {
+        const line = data!.lines[0];
+        expect(typeof line.id).toBe('number');
+        expect(typeof line.type).toBe('string');
+        expect(line.quantityOrdered).toBeDefined();
+        expect(typeof line.quantityOrdered!.value).toBe('number');
+        expect(typeof line.quantityOrdered!.unit).toBe('string');
+      }
+    });
+
+    it('get() returns error for non-existent id', async () => {
+      const [data, error] = await client.v7.purchaseOrders.get('123456789');
+      expect(data).toBeNull();
+      expect(error).not.toBeNull();
+    });
+  });
 });
