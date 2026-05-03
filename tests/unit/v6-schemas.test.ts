@@ -21,6 +21,9 @@ import {
   ProductSchema,
   ProductResponseSchema,
   ProductListResponseSchema,
+  PurchaseOrderLineSchema,
+  PurchaseOrderSchema,
+  PurchaseOrderResponseSchema,
 } from '../../src/validation/schemas';
 
 // ─── AddressSchema ────────────────────────────────────────────────────────────
@@ -477,5 +480,179 @@ describe('ProductListResponseSchema', () => {
   it('accepts response without optional products array', () => {
     const result = ProductListResponseSchema.safeParse({ status: 'Success' });
     expect(result.success).toBe(true);
+  });
+});
+
+// ─── PurchaseOrderLineSchema ─────────────────────────────────────────────────
+
+describe('PurchaseOrderLineSchema', () => {
+  it('accepts a valid purchase order line', () => {
+    const result = PurchaseOrderLineSchema.safeParse({
+      id: 63872,
+      type: 'STOCK',
+      lineNumber: null,
+      itemCode: 'LAB/SBY/SB/FR',
+      vendorCode: '2025',
+      description: 'Label - Sunday Bay Sauvignon Blanc Front',
+      unitPrice: 0.1977,
+      totalPrice: 1284.98,
+      taxable: true,
+      quantityOrdered: { unit: 'units', value: 6500.0 },
+      quantityFulfilled: { unit: 'units', value: 6500.0 },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a minimal valid line (only required fields)', () => {
+    const result = PurchaseOrderLineSchema.safeParse({ id: 1, type: 'ADHOC' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects missing required id', () => {
+    const result = PurchaseOrderLineSchema.safeParse({ type: 'STOCK' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing required type', () => {
+    const result = PurchaseOrderLineSchema.safeParse({ id: 1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid line type enum', () => {
+    const result = PurchaseOrderLineSchema.safeParse({ id: 1, type: 'INVALID' });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all valid line type enums', () => {
+    for (const type of ['GENERAL', 'ADHOC', 'WINE_BATCH', 'STOCK']) {
+      const result = PurchaseOrderLineSchema.safeParse({ id: 1, type });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('accepts null nullable fields', () => {
+    const result = PurchaseOrderLineSchema.safeParse({
+      id: 1,
+      type: 'GENERAL',
+      lineNumber: null,
+      itemCode: null,
+      vendorCode: null,
+      description: null,
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+// ─── PurchaseOrderSchema ────────────────────────────────────────────────────
+
+describe('PurchaseOrderSchema', () => {
+  it('accepts a complete valid purchase order', () => {
+    const result = PurchaseOrderSchema.safeParse({
+      id: 6000,
+      name: 'VPO5886',
+      state: 'NEW',
+      fulfillment: 'FULFILLED',
+      taxPolicy: 'TAX_EXCLUSIVE',
+      freightCost: null,
+      inactive: false,
+      vendor: { id: 80, name: 'MCC Albany', extId: 'b929a7c9-cf61-42d4-993f-0fca5e54dcc5' },
+      vendorReference: null,
+      deliverBy: 1753324200000,
+      notes: 'SUNDAY BAY SAB - QR - digital print',
+      winery: { id: 1, name: 'Wairau River Wines', businessUnit: null },
+      lines: [
+        {
+          id: 63872,
+          type: 'STOCK' as const,
+          quantityOrdered: { unit: 'units', value: 6500.0 },
+          quantityFulfilled: { unit: 'units', value: 6500.0 },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a minimal valid purchase order (only id and name)', () => {
+    const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects missing required id', () => {
+    const result = PurchaseOrderSchema.safeParse({ name: 'PO-1' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing required name', () => {
+    const result = PurchaseOrderSchema.safeParse({ id: 1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts null nullable fields', () => {
+    const result = PurchaseOrderSchema.safeParse({
+      id: 1,
+      name: 'PO-1',
+      freightCost: null,
+      vendorReference: null,
+      deliverBy: null,
+      notes: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects invalid state enum', () => {
+    const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', state: 'INVALID' });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all valid state enums', () => {
+    for (const state of ['NEW', 'APPROVED']) {
+      const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', state });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('rejects invalid fulfillment enum', () => {
+    const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', fulfillment: 'INVALID' });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all valid fulfillment enums', () => {
+    for (const fulfillment of ['NOT_FULFILLED', 'PART_FULFILLED', 'FULFILLED', 'OVER_FULFILLED']) {
+      const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', fulfillment });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('rejects invalid taxPolicy enum', () => {
+    const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', taxPolicy: 'INVALID' });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all valid taxPolicy enums', () => {
+    for (const taxPolicy of ['TAX_INCLUSIVE', 'TAX_EXCLUSIVE', 'NO_TAX']) {
+      const result = PurchaseOrderSchema.safeParse({ id: 1, name: 'PO-1', taxPolicy });
+      expect(result.success).toBe(true);
+    }
+  });
+});
+
+// ─── PurchaseOrderResponseSchema ─────────────────────────────────────────────
+
+describe('PurchaseOrderResponseSchema', () => {
+  it('accepts a valid response with data', () => {
+    const result = PurchaseOrderResponseSchema.safeParse({
+      data: { id: 234234, name: 'PO-2' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects response missing data field', () => {
+    const result = PurchaseOrderResponseSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects response with null data', () => {
+    const result = PurchaseOrderResponseSchema.safeParse({ data: null });
+    expect(result.success).toBe(false);
   });
 });

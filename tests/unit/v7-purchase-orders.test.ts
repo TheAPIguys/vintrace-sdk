@@ -53,7 +53,7 @@ describe('v7.purchaseOrders', () => {
       const client = makeClient();
       const [data, error] = await client.v7.purchaseOrders.get('234234');
       expect(error).toBeNull();
-      expect(data).toEqual(mockResponse);
+      expect(data).toEqual(mockResponse.data);
       const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
       expect(url).toContain('v7/account/purchase-orders/234234');
     });
@@ -62,6 +62,14 @@ describe('v7.purchaseOrders', () => {
       stubFetch(404, {});
       const client = makeClient();
       const [data, error] = await client.v7.purchaseOrders.get('999');
+      expect(data).toBeNull();
+      expect(error).not.toBeNull();
+    });
+
+    it('returns validation error when response body is empty', async () => {
+      stubFetch(200, {});
+      const client = makeClient();
+      const [data, error] = await client.v7.purchaseOrders.get('1');
       expect(data).toBeNull();
       expect(error).not.toBeNull();
     });

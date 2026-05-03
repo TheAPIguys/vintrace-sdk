@@ -1323,3 +1323,57 @@ export type BookingState = z.infer<typeof BookingStateSchema>;
 export type Booking = z.infer<typeof BookingSchema>;
 export type CreateBookingSuccessResponse = z.infer<typeof CreateBookingSuccessResponseSchema>;
 export type BookingDeactivationResponse = z.infer<typeof BookingDeactivationResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Purchase Orders
+// ---------------------------------------------------------------------------
+
+const PurchaseOrderStateEnum = z.enum(['NEW', 'APPROVED']);
+const FulfillmentEnum = z.enum(['NOT_FULFILLED', 'PART_FULFILLED', 'FULFILLED', 'OVER_FULFILLED']);
+const TaxPolicyEnum = z.enum(['TAX_INCLUSIVE', 'TAX_EXCLUSIVE', 'NO_TAX']);
+const PurchaseOrderLineTypeEnum = z.enum(['GENERAL', 'ADHOC', 'WINE_BATCH', 'STOCK']);
+
+export const PurchaseOrderLineSchema = z.object({
+  id: z.number(),
+  type: PurchaseOrderLineTypeEnum,
+  lineNumber: z.string().nullable().optional(),
+  itemCode: z.string().nullable().optional(),
+  vendorCode: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  itemName: z.string().optional(),
+  unitPrice: z.number().optional(),
+  totalPrice: z.number().optional(),
+  taxable: z.boolean().optional(),
+  quantityOrdered: MeasurementSchema.optional(),
+  quantityFulfilled: MeasurementSchema.optional(),
+});
+
+export const PurchaseOrderSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  state: PurchaseOrderStateEnum.optional(),
+  fulfillment: FulfillmentEnum.optional(),
+  taxPolicy: TaxPolicyEnum.optional(),
+  freightCost: z.number().nullable().optional(),
+  inactive: z.boolean().optional(),
+  vendor: ExtIdentifiableEntitySchema.optional(),
+  vendorReference: z.string().nullable().optional(),
+  deliverBy: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  winery: z
+    .object({
+      id: z.number().optional(),
+      name: z.string().optional(),
+      businessUnit: z.string().nullable().optional(),
+    })
+    .optional(),
+  lines: PurchaseOrderLineSchema.array().optional(),
+});
+
+export const PurchaseOrderResponseSchema = z.object({
+  data: PurchaseOrderSchema,
+});
+
+export type PurchaseOrderLine = z.infer<typeof PurchaseOrderLineSchema>;
+export type PurchaseOrder = z.infer<typeof PurchaseOrderSchema>;
+export type PurchaseOrderResponse = z.infer<typeof PurchaseOrderResponseSchema>;
