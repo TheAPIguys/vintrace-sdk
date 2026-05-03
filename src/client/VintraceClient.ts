@@ -1734,7 +1734,7 @@ class PurchaseOrdersClient {
       { responseSchema: PurchaseOrderResponseSchema }
     );
     if (error) return [null, error];
-    if (!response) return [null, null];
+    if (!response?.data) return [null, null];
     return [response.data, null];
   }
 }
