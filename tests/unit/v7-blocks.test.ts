@@ -98,7 +98,16 @@ describe('v7.blocks', () => {
 
   describe('post()', () => {
     it('calls POST v7/harvest/blocks with data and unwraps response.data', async () => {
-      const mockResponse = { data: { id: 123, name: 'New Block', code: 'NB-1' } };
+      const mockResponse = {
+        data: {
+          id: 123,
+          extId: 'EXT-001',
+          name: 'New Block',
+          code: 'NB-1',
+          vineyard: { id: 1, name: 'Test Vineyard', grower: { id: 10, extId: 'G-001' } },
+          variety: { id: 5, name: 'Pinot Noir' },
+        },
+      };
       stubFetch(200, mockResponse);
       const client = makeClient();
       const payload = { name: 'New Block', extId: 'EXT-001' };

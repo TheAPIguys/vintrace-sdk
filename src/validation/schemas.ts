@@ -645,10 +645,9 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
     results: z.array(itemSchema).optional(),
   });
 
-export const VineyardIdentifiableEntitySchema = z.object({
-  id: z.number().optional(),
-  name: z.string().optional(),
-  grower: ExtIdentifiableEntitySchema.optional(),
+export const VineyardIdentifiableEntitySchema = IdentifiableEntitySchema.extend({
+  name: z.string(),
+  grower: ExtIdentifiableEntitySchema,
 });
 
 export const GradingSchema = z.object({
@@ -659,12 +658,14 @@ export const GradingSchema = z.object({
 });
 
 export const BulkStockSchema = z.object({
-  id: z.number().optional(),
-  productId: z.number().optional(),
-  productName: z.string().optional(),
-  vintage: z.string().optional(),
-  volume: VolumeSchema.optional(),
-  percentage: z.number().optional(),
+  totalVolume: VolumeSchema.optional(),
+  equivalentVolume: VolumeSchema.optional(),
+  equivalentWeight: VolumeSchema.optional(),
+  compWeighting: z.number().optional(),
+  percentageOfFruit: z.number().optional(),
+  batchId: z.number().optional(),
+  batchName: z.string().optional(),
+  grading: GradingSchema.nullable().optional(),
 });
 
 export const FruitPlacementSchema = z.object({
@@ -680,7 +681,7 @@ export const BlockDataSchema = z.object({
   inactive: z.boolean().optional(),
   description: z.string().optional(),
   rowNumbers: z.string().optional(),
-  estate: z.string().optional(),
+  estate: z.boolean().optional(),
   grower: ExtIdentifiableEntitySchema.optional(),
   vineyard: VineyardIdentifiableEntitySchema.optional(),
   region: IdentifiableEntitySchema.optional(),
@@ -693,42 +694,47 @@ export const BlockDataSchema = z.object({
 
 export const GetBlocksSuccessResponseSchema = PaginatedResponseSchema(BlockDataSchema);
 
-export const BlockSchema = BlockDataSchema.extend({
+export const BlockSchema = ExtIdentifiableEntitySchema.extend({
+  extId: z.string(),
+  name: z.string(),
+  estate: z.boolean().optional(),
+  vineyard: VineyardIdentifiableEntitySchema,
+  variety: IdentifiableEntitySchema,
+  countyCode: z.string().optional(),
+  inactive: z.boolean().optional(),
+  noOfVines: z.number().optional(),
   area: z.number().optional(),
-  areaUnit: z.string().optional(),
-  colour: z.string().optional(),
-  source: z.string().optional(),
-  sourceId: z.string().optional(),
-  externalId: z.string().optional(),
-  blockType: z.string().optional(),
-  directionFaced: z.string().optional(),
+  rootStock: IdentifiableEntitySchema.optional(),
+  clone: IdentifiableEntitySchema.optional(),
+  vineSpacing: z.string().optional(),
+  rowSpacing: z.string().optional(),
+  soilProfile: z.string().optional(),
+  trellis: IdentifiableEntitySchema.optional(),
   aspect: z.string().optional(),
-  slope: z.string().optional(),
-  elevation: z.number().optional(),
-  soilType: z.string().optional(),
-  drainage: z.string().optional(),
-  irrigation: z.string().optional(),
-  trellisSystem: z.string().optional(),
-  rootstock: z.string().optional(),
-  clone: z.string().optional(),
-  plantingDate: z.number().optional(),
-  plantingDateAsText: z.string().optional(),
-  rowOrientation: z.string().optional(),
-  rowSpacing: z.number().optional(),
-  vineSpacing: z.number().optional(),
-  totalVines: z.number().optional(),
-  totalArea: z.number().optional(),
-  totalAreaUnit: z.string().optional(),
-  established: z.number().optional(),
+  plantedTime: z.number().optional(),
+  pruningType: z.string().optional(),
+  averageGradient: z.number().optional(),
+  irrigationType: z.string().optional(),
+  frostProtection: z.string().optional(),
   organic: z.boolean().optional(),
-  biodynamic: z.boolean().optional(),
-  sustainable: z.boolean().optional(),
-  certified: z.boolean().optional(),
-  notes: z.string().optional(),
-  createdDate: z.number().optional(),
-  createdDateAsText: z.string().optional(),
-  modifiedDate: z.number().optional(),
-  modifiedDateAsText: z.string().optional(),
+  organicCertifiedTime: z.number().optional(),
+  township: z.string().optional(),
+  range: z.string().optional(),
+  section: z.string().optional(),
+  emitterRate: z.number().optional(),
+  emitterSize: z.string().optional(),
+  siteId: z.string().optional(),
+  noOfRows: z.number().optional(),
+  districtCode: z.string().optional(),
+  regionalAdminCode: z.string().optional(),
+  comments: z.string().optional(),
+  code: z.string().optional(),
+  defaultHarvestMethod: z.string().optional(),
+  description: z.string().optional(),
+  graftedDate: z.number().optional(),
+  intendedUse: IdentifiableEntitySchema.optional(),
+  rowNumbers: z.string().optional(),
+  vineStructure: IdentifiableEntitySchema.optional(),
 });
 
 export const BlockResponseSchema = z.object({
