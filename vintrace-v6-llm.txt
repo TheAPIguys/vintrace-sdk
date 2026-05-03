@@ -1,0 +1,1268 @@
+# Vintrace API v6 Reference
+
+> AI-friendly API reference derived from the OpenAPI 3.0.3 spec.
+
+## Servers & Auth
+
+All paths relative to `<base>/vinx2/api/v6/`.
+
+- **Production**: `https://oz50.vintrace.net/vinx2/api/v6`
+- **Sandbox**: `https://sandbox.vintrace.net/vinx2demo/api/v6`
+- **Auth**: Cookie/session-based (login via vintrace web app).
+- **Headers**: `Accept: application/json`
+- **Dates**: `YYYY-MM-DD` strings, epoch millis in some fields.
+
+## Response Patterns
+
+### Paginated List (GET /collection)
+```json
+{ "firstResult": 0, "maxResult": 20, "totalResultCount": 200,
+  "nextURLPath": "...", "prevURLPath": "...", "results": [...] }
+```
+- Use `first` / `max` query params. `max` defaults to 20 (some endpoints: 100).
+
+### Single Resource (GET by ID/code)
+Returns the object directly (no envelope).
+
+### Write Response Envelope
+```json
+{ "status": "Success", "message": null, "<entity>": { ... } }
+```
+
+## Endpoints
+
+> `first`/`max` omitted for brevity.
+
+
+### Harvest
+
+**POST** `/block-assessments/create`  
+  Create a block assessment
+  _Request_: `FullBlockAssessmentRequest`
+    Fields: id, block, vintage, assessmentDate, assessedBy, producingForecast, availableForecast, intendedUse, harvestMethod, expectedHarvestDate, earliestHarvestDate, grading, expectedProgram, contract, sprayReportReceived
+    (+9 more)
+  _Response_: `FullBlockAssessment`
+    Fields: id, block, vintage, assessmentDate, assessedBy, producingForecast, availableForecast, intendedUse, harvestMethod, expectedHarvestDate, earliestHarvestDate, grading, expectedProgram, contract, sprayReportReceived
+    (+9 more)
+
+### Identity
+
+**GET** `/party`  
+  Get party details by name
+  _Params_: name
+  _Response_: `Party`
+    Fields: primeName, phone, id, givenName, email, address, isOrganization
+
+**POST** `/party`  
+  Create or update a party
+  _Request_: `Party`
+    Fields: primeName, phone, id, givenName, email, address, isOrganization
+  _Response_: `PartyUpdateResponse`
+    Fields: status, message, party
+
+**GET** `/party/list`  
+  List parties
+  _Params_: startsWith, category
+  _Response_: `PartyResponse`
+    Fields: status, message, parties
+
+**GET** `/party/{id}`  
+  Get party details by id
+  _Params_: id
+  _Response_: `Party`
+    Fields: primeName, phone, id, givenName, email, address, isOrganization
+
+### Operations
+
+**GET** `/intake-operations/search`  
+  Fruit intake operation search
+  _Params_: modifiedSince, operationId, processId, deliveryDocket, intakeDocket, externalWeighTag, externalSystemBlocksOnly, externalBlockId, blockId, blockName, vineyardId, vineyardName, wineryId, wineryName, growerType, growerId, growerName, ownerId, ownerName, vintage, recordedAfter, recordedBefore, customAdapter, maxResults, firstResult
+  _Response_: `IntakeOperationSearchResponse`
+    Fields: status, message, resultCount, resultLimit, nextResult, intakes
+
+**GET** `/sample-operations/search`  
+  Maturity samples search
+  _Params_: modifiedSince, operationId, processId, externalSystemBlocksOnly, externalBlockId, blockId, blockName, vineyardId, vineyardName, growerId, growerName, ownerId, ownerName, vintage, recordedAfter, recordedBefore, customAdapter, maxResults, firstResult
+  _Response_: `SampleOperationSearchResponse`
+    Fields: status, message, resultCount, resultLimit, nextResult, samples
+
+**GET** `/transaction/search`  
+  Transaction search
+  _Params_: dateFrom, dateTo, ownerName, batchName, wineryName
+  _Response_: `TransactionSummaryResponse`
+    Fields: status, message, transactionSummaries
+
+### Products
+
+**POST** `/product-update`  
+  Update a product
+  _Request_: `ProductUpdateData`
+    Fields: productId, effectiveDate, updateFields
+  _Response_: `ProductUpdateResponse`
+    Fields: status, errorList, product
+
+**GET** `/products/list`  
+  List available products
+  _Params_: barcode, skipMetrics
+  _Response_: `ProductListResponse`
+    Fields: status, products
+
+**GET** `/products/{id}`  
+  Search for a product by id
+  _Params_: barcode
+  _Response_: `ProductResponse`
+    Fields: status, product, vessel
+
+### Sales
+
+**GET** `/refund`  
+  Get refund details by code
+  _Params_: code
+  _Response_: `Refund`
+    Fields: id, name, refundDate, refundDateAsText, reference, stockReturned, storageAreaId, storageAreaName, customerId, customerName, refundStatus, notes, salesOrderId, salesOrderName, subTotal
+    (+4 more)
+
+**POST** `/refund`  
+  Create or update a refund
+  _Request_: `Refund`
+    Fields: id, name, refundDate, refundDateAsText, reference, stockReturned, storageAreaId, storageAreaName, customerId, customerName, refundStatus, notes, salesOrderId, salesOrderName, subTotal
+    (+4 more)
+  _Response_: `RefundUpdateResponse`
+    Fields: status, message, refund
+
+**GET** `/refund/list`  
+  List available refunds
+  _Params_: startsWith, status, customerName, startDate, endDate, salesOrderName
+  _Response_: `RefundResponse`
+    Fields: status, message, refund
+
+**GET** `/refund/{id}`  
+  Get refund details by id
+  _Params_: id
+  _Response_: `Refund`
+    Fields: id, name, refundDate, refundDateAsText, reference, stockReturned, storageAreaId, storageAreaName, customerId, customerName, refundStatus, notes, salesOrderId, salesOrderName, subTotal
+    (+4 more)
+
+**GET** `/sales-order`  
+  Get sales order details by code
+  _Params_: code
+  _Response_: `SalesOrder`
+    Fields: id, invoiceDate, invoiceDateAsText, customerId, customerName, sendTo, salesType, salesPriceListId, salesPriceListName, priceDetails, salesOrderStatus, salesOrderItems, code, reference, orderDate
+    (+18 more)
+
+**POST** `/sales-order`  
+  Create or update a sales order
+  _Request_: `SalesOrder`
+    Fields: id, invoiceDate, invoiceDateAsText, customerId, customerName, sendTo, salesType, salesPriceListId, salesPriceListName, priceDetails, salesOrderStatus, salesOrderItems, code, reference, orderDate
+    (+18 more)
+  _Response_: `SalesOrderUpdateResponse`
+    Fields: status, message, salesOrders
+
+**GET** `/sales-order/list`  
+  List available sales orders
+  _Params_: startsWith, status, customerName, startDate, endDate, invStartDate, invEndDate, externalTransactionId
+  _Response_: `SalesOrderResponse`
+    Fields: status, message, salesOrders
+
+**GET** `/sales-order/{id}`  
+  Get sales order details by id
+  _Params_: id
+  _Response_: `SalesOrder`
+    Fields: id, invoiceDate, invoiceDateAsText, customerId, customerName, sendTo, salesType, salesPriceListId, salesPriceListName, priceDetails, salesOrderStatus, salesOrderItems, code, reference, orderDate
+    (+18 more)
+
+### Search
+
+**GET** `/search/list`  
+  List results for item type
+  _Params_: type, startsWith, exactMatch
+  _Response_: `SimpleSearchResponse`
+    Fields: firstResult, maxResult, totalResultCount, nextURLPath, prevURLPath, simpleSearchResults
+
+### Stock
+
+**GET** `/inventory`  
+  List available stock
+  _Params_: date, stockType, ownerName, showEquivalentType, breakoutCosting, disableCommitHeaders
+  _Response_: `InventorySummaryResponse`
+    Fields: status, message, inventorySummaries
+
+**GET** `/mrp/stock/{id}`  
+  View a single stock item
+  _Params_: id, expand
+  _Response_: `StockItem`
+    Fields: id, code, name, inactive, modified, category, beverageProperties, unit, quantity, owner, wineProduct, lotTracked, levelTracked, tags, userPermissions
+    (+6 more)
+
+**GET** `/mrp/stock/{id}/bulk-info`  
+  View bulk product details
+  _Params_: id
+  _Response_: `StockBulkInfoDetail`
+    Fields: endpoint, message, metrics, compositionDetails, additionsSummary
+
+**GET** `/mrp/stock/{id}/distributions`  
+  View distributions
+  _Params_: id
+  _Response_: `StockDistributionDetail`
+    Fields: endpoint, distributions
+
+**GET** `/mrp/stock/{id}/fields`  
+  View list of details fields
+  _Params_: id
+  _Response_: `StockFieldsDetail`
+    Fields: endpoint, fields
+
+**GET** `/mrp/stock/{id}/history-items`  
+  View History items
+  _Params_: id, firstResult, maxResult
+  _Response_: `StockHistoryItemsDetail`
+    Fields: endpoint, firstResult, maxResult, totalResultCount, historyItems
+
+**GET** `/mrp/stock/{id}/notes`  
+  View all notes
+  _Params_: firstResult, maxResult
+  _Response_: `StockNotesDetail`
+    Fields: endpoint, maxResult, firstResult, totalResultCount, prevURLPath, nextURLPath, notes
+
+**POST** `/mrp/stock/{id}/notes`  
+  Add a Note
+  _Request_: `StockNote`
+    Fields: id, date, dateText, who, subject, detail, item, attachments, inactive
+  _Response_: `StockNote`
+    Fields: id, date, dateText, who, subject, detail, item, attachments, inactive
+
+**GET** `/mrp/stock/{id}/notes/{noteId}`  
+  View a single Note
+  _Params_: id, noteId
+  _Response_: `StockNote`
+    Fields: id, date, dateText, who, subject, detail, item, attachments, inactive
+
+**POST** `/mrp/stock/{id}/notes/{noteId}/updates`  
+  Update a Note
+  _Params_: id, noteId
+  _Request_: `StockNote`
+    Fields: id, date, dateText, who, subject, detail, item, attachments, inactive
+  _Response_: `StockNote`
+    Fields: id, date, dateText, who, subject, detail, item, attachments, inactive
+
+**GET** `/mrp/stock/{id}/raw-components`  
+  View raw components
+  _Params_: id
+  _Response_: `StockRawComponentsDetail`
+    Fields: endpoint, rawComponents
+
+**GET** `/stock/lookup`  
+  Get stock item by code or id
+  _Params_: code, id
+  _Response_: `StockItemDetails`
+    Fields: id, code, itemType, unit, owner, assetAccount, cogsAccount, category, product, brand, federalTaxClass, stateTaxClass, rawTaxClass, sku, labelAlcohol
+    (+5 more)
+
+### Work Orders
+
+**POST** `/workorders/assign`  
+  Assign a work order
+  _Request_: `AssignWorkData`
+    Fields: workOrderId, jobId, dateStarted, assignOperatorId, reassignWorkOrder
+  _Response_: `AssignWorkResponse`
+    Fields: status, message, jobEndpointURL, workOrderEndpointURL
+
+**GET** `/workorders/jobs/{jobId}`  
+  Get job details by id
+  _Params_: jobId
+  _Response_: `Job`
+    Fields: id, code, scheduledDate, finishedDate, scheduledDateAsText, finishedDateAsText, status, assignedBy, assignedTo, summaryText, miniSummaryText, jobColour, jobNumber, stepText, steps
+    (+4 more)
+
+**GET** `/workorders/list`  
+  List available work orders
+  _Params_: startsWith, assignedTo, workOrderState, fromDate, toDate, countOnly, wineryId
+  _Response_: `WorkOrderSearchResponse`
+    Fields: firstResult, maxResult, totalResultCount, nextURLPath, prevURLPath, listText, workOrders
+
+**POST** `/workorders/submit`  
+  Submit job details
+  _Request_: `SubmitJobRequest`
+    Fields: jobId, submitType, dateStarted, fields, attachments
+  _Response_: `SubmitWorkOrderStepsResponse`
+    Fields: status, message
+
+**GET** `/workorders/{id}`  
+  Get work order details by id or code
+  _Params_: id, code
+  _Response_: `WorkOrder`
+    Fields: id, code, jobCount, jobCountText, status, assignedTo, assignedBy, assignedDate, scheduledDate, assignedDateAsText, scheduledDateAsText, canAssign, summary, indicators, bond
+    (+4 more)
+
+## Key Schemas
+
+Schemas with at least 3 properties:
+
+
+### AdditionOps (12 fields)
+
+- `vesselId`: integer
+- `vesselName`: string
+- `batchId`: integer
+- `batchName`: string
+- `templateId`: integer
+- `templateName`: string
+- `changeToState`: string
+- `volume`: string
+- `amount`: number
+- `unit`: string
+- `lotNumbers`: array
+- `additive`: ref
+
+### Address (6 fields)
+
+- `street1`: string
+- `street2`: string
+- `city`: string
+- `state`: string
+- `postalCode`: string
+- `country`: string
+
+### AnalysisOps (7 fields)
+
+- `vesselId`: integer
+- `vesselName`: string
+- `batchId`: integer
+- `batchName`: string
+- `templateId`: integer
+- `templateName`: string
+- `metrics`: array
+
+### AssignWorkData (5 fields)
+
+- `workOrderId`: integer
+- `jobId`: integer
+- `dateStarted`: string
+- `assignOperatorId`: integer
+- `reassignWorkOrder`: boolean
+
+### AssignWorkResponse (4 fields)
+
+- `status`: string
+- `message`: string
+- `jobEndpointURL`: string
+- `workOrderEndpointURL`: string
+
+### Attachment (10 fields)
+
+- `id`: integer
+- `fileName`: string
+- `fileType`: string
+- `contentType`: string
+- `fileContext`: string
+- `viewEndpoint`: string
+- `thumbEndpoint`: string
+- `dateStamp`: string
+- `fileSize`: number
+- `fileLocation`: ref
+
+### BasicBatchDetails (5 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+
+### BeverageTypeProperties (5 fields)
+
+- `iconColour`: string
+- `statusCharacter`: string
+- `statusString`: string
+- `textColour`: string
+- `linkedBeverageType`: ref
+
+### BrandAllocation (8 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `geographicIndicator`: string
+- `owner`: string
+- `winery`: string
+
+### Codeable (4 fields)
+
+- `id`: integer
+- `name`: string
+- `shortCode`: string
+- `externalCode`: string
+
+### Components (3 fields)
+
+- `quantity`: integer
+- `unit`: string
+- `item`: ref
+
+### Distribution (13 fields)
+
+- `id`: integer
+- `itemCode`: string
+- `qty`: integer
+- `available`: integer
+- `areaName`: string
+- `areaId`: integer
+- `buildingName`: string
+- `wineryName`: string
+- `bay`: string
+- `lotCode`: string
+- `bondName`: string
+- `bondNumber`: string
+- `taxState`: string
+
+### FieldValuePair (6 fields)
+
+- `field`: string
+- `value`: string
+- `fieldId`: integer
+- `canEdit`: boolean
+- `canDeselect`: boolean
+- `editableFieldType`: string
+
+### FinalProduct (6 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `geographicIndicator`: string
+
+### FromVessel (6 fields)
+
+- `name`: string
+- `id`: integer
+- `beforeDetails`: ref
+- `afterDetails`: ref
+- `volOut`: integer
+- `volOutUnit`: string
+
+### FullBlockAssessment (24 fields)
+
+- `id`: integer
+- `block`: ref
+- `vintage`: integer
+- `assessmentDate`: string
+- `assessedBy`: ref
+- `producingForecast`: ref
+- `availableForecast`: ref
+- `intendedUse`: ref
+- `harvestMethod`: string
+- `expectedHarvestDate`: integer
+- `earliestHarvestDate`: integer
+- `grading`: ref
+- `expectedProgram`: ref
+- `contract`: ref
+- `sprayReportReceived`: integer
+- `sprayReportAttachment`: ref
+- `capitalBlock`: boolean
+- `capitalProjectNumber`: string
+- `cropInspected`: integer
+- `comments`: string
+- `exceptionList`: array
+- `intendedProduct`: ref
+- `attachments`: ref
+- `locationDetails`: ref
+
+### FullBlockAssessmentRequest (24 fields)
+
+- `id`: integer
+- `block`: ref
+- `vintage`: integer
+- `assessmentDate`: string
+- `assessedBy`: ref
+- `producingForecast`: ref
+- `availableForecast`: ref
+- `intendedUse`: ref
+- `harvestMethod`: string
+- `expectedHarvestDate`: integer
+- `earliestHarvestDate`: integer
+- `grading`: ref
+- `expectedProgram`: ref
+- `contract`: ref
+- `sprayReportReceived`: integer
+- `sprayReportAttachment`: ref
+- `capitalBlock`: boolean
+- `capitalProjectNumber`: string
+- `cropInspected`: integer
+- `comments`: string
+- `exceptionList`: array
+- `intendedProduct`: ref
+- `attachments`: ref
+- `locationDetails`: ref
+
+### Grading (4 fields)
+
+- `id`: integer
+- `value`: string
+- `scaleName`: string
+- `scaleId`: integer
+
+### IntakeOperation (35 fields)
+
+- `operationId`: integer
+- `processId`: integer
+- `reversed`: boolean
+- `effectiveDate`: integer
+- `modified`: integer
+- `bookingNumber`: string
+- `block`: ref
+- `vineyard`: ref
+- `winery`: string
+- `grower`: ref
+- `region`: ref
+- `variety`: ref
+- `owner`: ref
+- `vintage`: integer
+- `deliveryStart`: integer
+- `deliveryEnd`: integer
+- `driverName`: string
+- `truckRegistration`: string
+- `carrier`: ref
+- `consignmentNote`: string
+- `docketNo`: string
+- `amount`: number
+- `grossAmount`: ref
+- `tareAmount`: ref
+- `metrics`: array
+- `mog`: ref
+- `harvestMethod`: string
+- `intendedUse`: ref
+- `growerContract`: ref
+- `lastLoad`: boolean
+- `fruitCost`: number
+- `fruitCostRateType`: string
+- `area`: number
+- `additionalDetails`: object
+- `externalWeighTag`: string
+
+### IntakeOperationSearchResponse (6 fields)
+
+- `status`: string
+- `message`: string
+- `resultCount`: integer
+- `resultLimit`: integer
+- `nextResult`: integer
+- `intakes`: array
+
+### InventorySummary (62 fields)
+
+- `date`: integer
+- `dateAsText`: string
+- `winery`: string
+- `quantity`: integer
+- `committed`: integer
+- `onOrder`: integer
+- `available`: integer
+- `unit`: string
+- `code`: string
+- `name`: string
+- `lotBatch`: string
+- `lotExpiryDate`: string
+- `lotExpiryDateAsText`: string
+- `lotManufactureDate`: string
+- `lotManufactureDateAsText`: string
+- `reorderCode`: string
+- `location`: string
+- `stockCategory`: string
+- `grading`: ref
+- `price`: string
+- `priceAsText`: string
+- `taxClass`: string
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `taxState`: string
+- `bond`: string
+- `sizeRatio`: string
+- `finalProducts`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `program`: string
+- `productState`: string
+- `beverageType`: string
+- `baseMaterial`: string
+- `owner`: string
+- `assetAccount`: string
+- `cogsAccount`: string
+- `unitCost`: number
+- `unitCostAsText`: string
+- `totalCost`: number
+- `totalCostAsText`: string
+- `fruitCost`: string
+- `fruitCostAsText`: string
+- `bulkCost`: string
+- `bulkCostAsText`: string
+- `additiveCost`: string
+- `additiveCostAsText`: string
+- `operationCost`: string
+- `operationCostAsText`: string
+- `packagingCost`: string
+- `packagingCostAsText`: string
+- `storageCost`: string
+- `storageCostAsText`: string
+- `overheadCost`: string
+- `overheadCostAsText`: string
+- `freightCost`: string
+- `freightCostAsText`: string
+- `otherCost`: string
+- `otherCostAsText`: string
+- `sku`: string
+- `stockItemDetailsEndpoint`: string
+
+### InventorySummaryResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `inventorySummaries`: array
+
+### ItemSummary (3 fields)
+
+- `id`: integer
+- `itemType`: string
+- `code`: string
+
+### Job (19 fields)
+
+- `id`: integer
+- `code`: string
+- `scheduledDate`: integer
+- `finishedDate`: string
+- `scheduledDateAsText`: string
+- `finishedDateAsText`: string
+- `status`: string
+- `assignedBy`: string
+- `assignedTo`: string
+- `summaryText`: string
+- `miniSummaryText`: string
+- `jobColour`: string
+- `jobNumber`: integer
+- `stepText`: string
+- `steps`: array
+- `endpointURL`: string
+- `jobVersion`: integer
+- `workOrderId`: integer
+- `operationType`: string
+
+### JobField (9 fields)
+
+- `fieldId`: string
+- `fieldName`: string
+- `fieldType`: string
+- `dataType`: string
+- `mandatory`: boolean
+- `minSelections`: integer
+- `maxSelections`: integer
+- `selectedValues`: array
+- `stringValue`: string
+
+### JobFieldValue (12 fields)
+
+- `id`: integer
+- `name`: string
+- `dataType`: string
+- `code`: string
+- `fillType`: string
+- `fillTypeDisplay`: string
+- `confirmed`: boolean
+- `amount`: string
+- `extraDetailKey`: string
+- `preferred`: boolean
+- `breakdownMap`: array
+- `additionalDetails`: array
+
+### JobStep (6 fields)
+
+- `stepId`: integer
+- `stepNumber`: integer
+- `stepName`: string
+- `instructionText`: string
+- `fields`: array
+- `endpointURL`: string
+
+### LocationDetails (3 fields)
+
+- `latitude`: number
+- `longitude`: number
+- `formattedAddress`: string
+
+### LossDetails (3 fields)
+
+- `volume`: integer
+- `volumeUnit`: string
+- `reason`: string
+
+### MetricAnalysis (5 fields)
+
+- `id`: integer
+- `name`: string
+- `value`: number
+- `txtValue`: string
+- `unit`: string
+
+### Party (7 fields)
+
+- `primeName`: string
+- `phone`: string
+- `id`: integer
+- `givenName`: string
+- `email`: string
+- `address`: ref
+- `isOrganization`: boolean
+
+### PartyResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `parties`: array
+
+### PartyUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `party`: ref
+
+### Product (21 fields)
+
+- `id`: integer
+- `batchCode`: string
+- `vesselId`: integer
+- `descriptionCanEdit`: boolean
+- `volume`: object
+- `vesselCode`: string
+- `hasDipTable`: boolean
+- `dipTableEndpoint`: string
+- `colour`: string
+- `physicalProductState`: string
+- `vesselType`: string
+- `productStatus`: string
+- `productAnalysisEndpoint`: string
+- `productCompositionEndpoint`: string
+- `productEndpoint`: string
+- `liveMetrics`: array
+- `fieldValuePairs`: array
+- `canAccessNotes`: boolean
+- `notesCount`: integer
+- `notesEndpoint`: string
+- `beverageTypeProperties`: ref
+
+### ProductCompositonData (5 fields)
+
+- `key`: string
+- `value`: number
+- `valueStr`: string
+- `volume`: string
+- `unit`: string
+
+### ProductLiveMetric (8 fields)
+
+- `id`: integer
+- `name`: string
+- `unit`: string
+- `dataType`: string
+- `dataTypeValues`: string
+- `minVal`: integer
+- `maxVal`: integer
+- `measurements`: array
+
+### ProductLiveMetricMeasurement (6 fields)
+
+- `value`: string
+- `rateOfChange`: ref
+- `measurementDateText`: string
+- `measurementDate`: integer
+- `resultId`: integer
+- `canDelete`: boolean
+
+### ProductResponse (3 fields)
+
+- `status`: string
+- `product`: ref
+- `vessel`: ref
+
+### ProductUpdateData (3 fields)
+
+- `productId`: integer
+- `effectiveDate`: string
+- `updateFields`: array
+
+### ProductUpdateField (3 fields)
+
+- `propertyType`: string
+- `propertyValue`: string
+- `propertyId`: integer
+
+### ProductUpdateResponse (3 fields)
+
+- `status`: string
+- `errorList`: array
+- `product`: ref
+
+### QuantityBreakdown (4 fields)
+
+- `onHand`: integer
+- `committed`: integer
+- `ordered`: integer
+- `available`: integer
+
+### RateOfChangeResponse (4 fields)
+
+- `value`: number
+- `sign`: string
+- `absValue`: number
+- `unit`: string
+
+### Refund (19 fields)
+
+- `id`: integer
+- `name`: string
+- `refundDate`: integer
+- `refundDateAsText`: string
+- `reference`: string
+- `stockReturned`: boolean
+- `storageAreaId`: string
+- `storageAreaName`: string
+- `customerId`: integer
+- `customerName`: string
+- `refundStatus`: string
+- `notes`: string
+- `salesOrderId`: integer
+- `salesOrderName`: string
+- `subTotal`: number
+- `total`: number
+- `taxBreakdown`: array
+- `refundLineItems`: array
+- `posSaleReference`: string
+
+### RefundLineItem (7 fields)
+
+- `id`: integer
+- `itemId`: integer
+- `itemName`: string
+- `unitPrice`: integer
+- `returnQuantity`: integer
+- `returnTotal`: integer
+- `taxAmount`: number
+
+### RefundResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `refund`: array
+
+### RefundUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `refund`: ref
+
+### SalesOrder (33 fields)
+
+- `id`: integer
+- `invoiceDate`: string
+- `invoiceDateAsText`: string
+- `customerId`: integer
+- `customerName`: string
+- `sendTo`: ref
+- `salesType`: string
+- `salesPriceListId`: integer
+- `salesPriceListName`: string
+- `priceDetails`: ref
+- `salesOrderStatus`: string
+- `salesOrderItems`: array
+- `code`: string
+- `reference`: string
+- `orderDate`: integer
+- `orderDateAsText`: string
+- `wineryId`: string
+- `wineryName`: string
+- `fulfillment`: string
+- `fulfillmentDate`: string
+- `fulfillmentDateAsText`: string
+- `salesRegionId`: string
+- `salesRegionCode`: string
+- `notes`: string
+- `customerPickup`: boolean
+- `disableAccountsSync`: boolean
+- `subTotal`: integer
+- `taxBreakdown`: array
+- `total`: integer
+- `acctReference`: string
+- `posSaleReference`: string
+- `ignoreStockError`: boolean
+- `externalTransactionId`: string
+
+### SalesOrderItem (16 fields)
+
+- `id`: integer
+- `itemId`: integer
+- `itemName`: string
+- `unitPrice`: number
+- `quantity`: integer
+- `unitOfMeasure`: string
+- `discountPct`: string
+- `adjustment`: string
+- `taxAmount`: number
+- `lineTotal`: integer
+- `accountId`: integer
+- `accountCode`: string
+- `taxRateId`: integer
+- `taxRateName`: string
+- `sku`: string
+- `externalReference`: string
+
+### SalesOrderResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `salesOrders`: array
+
+### SalesOrderUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `salesOrders`: ref
+
+### SampleOperation (22 fields)
+
+- `operationId`: integer
+- `processId`: integer
+- `reversed`: boolean
+- `modified`: integer
+- `block`: ref
+- `vineyard`: ref
+- `grower`: ref
+- `region`: ref
+- `variety`: ref
+- `owner`: ref
+- `vintage`: integer
+- `recordedDate`: integer
+- `reference`: string
+- `row`: string
+- `vine`: string
+- `grading`: ref
+- `sampleArea`: string
+- `sampleType`: string
+- `laboratory`: ref
+- `analysisTemplate`: ref
+- `metrics`: array
+- `additionalDetails`: object
+
+### SampleOperationSearchResponse (6 fields)
+
+- `status`: string
+- `message`: string
+- `resultCount`: integer
+- `resultLimit`: integer
+- `nextResult`: integer
+- `samples`: array
+
+### Searchable (3 fields)
+
+- `id`: integer
+- `name`: string
+- `summary`: string
+
+### SimpleMetric (6 fields)
+
+- `metricName`: string
+- `metricShortCode`: string
+- `value`: string
+- `unit`: string
+- `recorded`: string
+- `metricId`: integer
+
+### SimpleSearchResponse (6 fields)
+
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `nextURLPath`: string
+- `prevURLPath`: string
+- `simpleSearchResults`: array
+
+### SimpleSearchResult (4 fields)
+
+- `id`: integer
+- `name`: string
+- `summary`: string
+- `additionalDetails`: object
+
+### StockBulkInfoDetail (5 fields)
+
+- `endpoint`: string
+- `message`: string
+- `metrics`: array
+- `compositionDetails`: array
+- `additionsSummary`: array
+
+### StockDistributionItem (10 fields)
+
+- `id`: integer
+- `item`: ref
+- `winery`: string
+- `building`: ref
+- `storageArea`: ref
+- `bay`: string
+- `unit`: string
+- `quantity`: integer
+- `taxState`: string
+- `virtual`: boolean
+
+### StockHistoryItem (11 fields)
+
+- `operationId`: integer
+- `operatorName`: string
+- `quantity`: integer
+- `balance`: integer
+- `date`: integer
+- `workorder`: ref
+- `actionType`: string
+- `batch`: string
+- `item`: ref
+- `attachments`: array
+- `canReverse`: boolean
+
+### StockHistoryItemsDetail (5 fields)
+
+- `endpoint`: string
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `historyItems`: array
+
+### StockItem (21 fields)
+
+- `id`: integer
+- `code`: string
+- `name`: string
+- `inactive`: boolean
+- `modified`: integer
+- `category`: ref
+- `beverageProperties`: ref
+- `unit`: string
+- `quantity`: integer
+- `owner`: string
+- `wineProduct`: boolean
+- `lotTracked`: boolean
+- `levelTracked`: boolean
+- `tags`: array
+- `userPermissions`: array
+- `fields`: array
+- `distributions`: array
+- `historyItems`: array
+- `rawComponents`: array
+- `bulkInfo`: ref
+- `notes`: array
+
+### StockItemBasics (3 fields)
+
+- `id`: integer
+- `code`: string
+- `endpoint`: string
+
+### StockItemDetails (20 fields)
+
+- `id`: integer
+- `code`: string
+- `itemType`: string
+- `unit`: string
+- `owner`: string
+- `assetAccount`: string
+- `cogsAccount`: string
+- `category`: ref
+- `product`: ref
+- `brand`: ref
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `rawTaxClass`: string
+- `sku`: string
+- `labelAlcohol`: integer
+- `lotTracked`: boolean
+- `levelTracked`: boolean
+- `subComponents`: array
+- `rawComponents`: array
+- `distributions`: array
+
+### StockNote (9 fields)
+
+- `id`: integer
+- `date`: string
+- `dateText`: string
+- `who`: string
+- `subject`: string
+- `detail`: string
+- `item`: ref
+- `attachments`: array
+- `inactive`: boolean
+
+### StockNotesDetail (7 fields)
+
+- `endpoint`: string
+- `maxResult`: integer
+- `firstResult`: integer
+- `totalResultCount`: integer
+- `prevURLPath`: string
+- `nextURLPath`: string
+- `notes`: array
+
+### StockRawComponentItem (6 fields)
+
+- `endpoint`: string
+- `id`: integer
+- `code`: string
+- `unit`: string
+- `bomQuantity`: number
+- `beverageProperties`: ref
+
+### StockType (4 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `form`: ref
+
+### SubmitJobRequest (5 fields)
+
+- `jobId`: integer
+- `submitType`: string
+- `dateStarted`: string
+- `fields`: array
+- `attachments`: array
+
+### SubmitJobRequestField (5 fields)
+
+- `fieldId`: string
+- `value`: string
+- `dataType`: string
+- `parentFieldId`: string
+- `selectedValues`: array
+
+### SubmitJobRequestFieldValue (7 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `fillType`: string
+- `checked`: boolean
+- `amount`: string
+- `preferred`: boolean
+
+### Tag (3 fields)
+
+- `id`: integer
+- `name`: string
+- `sortIndex`: integer
+
+### TaxAmount (4 fields)
+
+- `name`: string
+- `amount`: number
+- `ratePct`: integer
+- `inclusive`: boolean
+
+### TaxState (4 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `defaultForInventory`: boolean
+
+### ToVessel (6 fields)
+
+- `name`: string
+- `id`: integer
+- `beforeDetails`: ref
+- `afterDetails`: ref
+- `volIn`: integer
+- `volInUnit`: string
+
+### TransOperation (19 fields)
+
+- `formattedDate`: string
+- `date`: integer
+- `operationId`: integer
+- `operationTypeId`: integer
+- `operationTypeName`: string
+- `subOperationTypeId`: integer
+- `subOperationTypeName`: string
+- `workorder`: string
+- `jobNumber`: string
+- `treatment`: string
+- `assignedBy`: string
+- `completedBy`: string
+- `winery`: string
+- `fromVessel`: ref
+- `toVessel`: ref
+- `lossDetails`: ref
+- `additionOps`: ref
+- `analysisOps`: ref
+- `additionalDetails`: string
+
+### TransactionSummaryResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `transactionSummaries`: array
+
+### Unit (3 fields)
+
+- `abbreviation`: string
+- `key`: string
+- `precision`: integer
+
+### VesselDetails (14 fields)
+
+- `contentsId`: integer
+- `batch`: string
+- `batchId`: integer
+- `volume`: integer
+- `volumeUnit`: string
+- `dip`: string
+- `state`: string
+- `rawTaxClass`: string
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `program`: string
+- `batchDetails`: ref
+- `bondNumber`: string
+- `bondRegisteredName`: string
+
+### WorkOrder (19 fields)
+
+- `id`: integer
+- `code`: string
+- `jobCount`: integer
+- `jobCountText`: string
+- `status`: string
+- `assignedTo`: string
+- `assignedBy`: string
+- `assignedDate`: integer
+- `scheduledDate`: integer
+- `assignedDateAsText`: string
+- `scheduledDateAsText`: string
+- `canAssign`: boolean
+- `summary`: string
+- `indicators`: array
+- `bond`: string
+- `winery`: string
+- `jobs`: array
+- `colourCode`: string
+- `endpointURL`: string
+
+### WorkOrderSearchResponse (7 fields)
+
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `nextURLPath`: string
+- `prevURLPath`: string
+- `listText`: string
+- `workOrders`: array

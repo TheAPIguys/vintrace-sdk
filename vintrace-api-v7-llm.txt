@@ -1,0 +1,1949 @@
+# Vintrace API v7 Reference
+
+> AI-friendly API reference derived from the OpenAPI 3.0.3 spec.
+> Concise and complete for LLM consumption.
+
+## Servers & Auth
+
+All paths relative to `<base>/wrw/api/v7/`.
+
+- **Production**: `https://oz50.vintrace.net`
+- **Sandbox**: `https://sandbox.vintrace.net`
+- **Auth**: Bearer token (`Authorization: Bearer <token>`)
+- **Correlation ID**: Every request/response uses `correlation-id` header (UUID)
+- **Dates**: epoch milliseconds (int64)
+
+## Response & Parameter Conventions
+
+### Paginated List (GET /collection)
+```json
+{ "totalResults": 120, "offset": 0, "limit": 10,
+  "first": "...", "previous": null, "next": "...", "last": "...",
+  "results": [...] }
+```
+
+### Single Resource (GET /resource/{id})
+```json
+{ "data": { ... } }
+```
+
+### Error (DefaultError)
+```json
+{ "correlationId": "uuid", "status": 400,
+  "code": "...", "message": "...", "details": [...] }
+```
+
+### Common Parameters (on most endpoints)
+
+| Parameter | Location | Type | Description |
+|---|---|---|---|
+| `CorrelationId` | header | string (uuid) | Request tracing ID |
+| `PaginationLimit` | query | integer | Page size (default varies) |
+| `PaginationOffset` | query | integer | Record offset for pagination |
+| `ModifiedSince` | query | int64 (epoch ms) | Filter modified >= timestamp |
+| `ModifiedBefore` | query | int64 (epoch ms) | Filter modified < timestamp |
+| `BusinessUnit` | query | string | Filter by business unit code |
+| `WineryName` | query | string | Filter by winery name |
+| `WineryId` | query | integer | Filter by winery ID |
+| `StartDate` | query | int64 (epoch ms) | Start of date range |
+| `EndDate` | query | int64 (epoch ms) | End of date range |
+| `ExtraFields` | query | string | Comma-separated field names to include |
+| `CreatedSince` | query | int64 (epoch ms) | Filter created >= |
+| `CreatedBefore` | query | int64 (epoch ms) | Filter created < |
+| `AssessedBy` | query | string | Filter by assessor name |
+| `VintraceEntityId` | path | integer | Entity identifier in URL |
+| `VintraceEntityIds` | query | string | CSV of entity IDs |
+| `OperationId` | path | integer | Operation ID |
+| `BlockId` | path | integer | Block ID |
+| `BookingId` | path | integer | Booking ID |
+| `FruitIntakeId` | path | integer | Fruit intake ID |
+| `ProductId` | path/query | integer | Product ID |
+| `VesselId` | path/query | integer | Vessel ID |
+| `VesselCode` | query | string | Vessel code filter |
+| `VesselType` | query | string | Vessel type filter |
+| `WineBatchCode` | query | string | Wine batch code filter |
+| `Owner` | query | string | Filter by owner |
+| `ReportDate` | query | int64 (epoch ms) | Report snapshot date |
+
+## Endpoints
+
+> CorrelationId is on ALL endpoints — omitted from individual endpoint param lists.
+
+
+### Harvest
+
+**GET** `/harvest/assessments`  
+  Get all the block assessments in the system.
+  _Params_: PaginationLimit, PaginationOffset, AssessedBy, CreatedSince, CreatedBefore, ExtraFields
+  _Response_: `GetAssessmentsResponse`
+
+**GET** `/harvest/blocks`  
+  Get all blocks in the system.
+  _Params_: PaginationLimit, PaginationOffset, VintraceEntityIds, include, vintage
+  _Response_: `GetBlocksSuccessResponse`
+
+**POST** `/harvest/blocks`  
+  _Request_: `Block`
+    Fields: name, estate, vineyard, variety, countyCode, inactive, noOfVines, area, rootStock, clone, vineSpacing, rowSpacing, soilProfile, trellis, aspect
+    (+23 more)
+  _Response_: `BlockResponse`
+    Fields: data
+
+**PATCH** `/harvest/blocks/{blockId}`  
+  Partially update some fields in the block record
+  _Params_: BlockId
+  _Response_: 204 (No Content)
+
+**POST** `/harvest/blocks/{blockId}/assessments`  
+  _Request_: `BlockAssessment`
+  _Response_: `BlockAssessmentResponse`
+    Fields: data
+
+**POST** `/harvest/maturity-samples`  
+  _Request_: `MaturitySample`
+  _Response_: `MaturitySampleResponse`
+    Fields: data
+
+**POST** `/harvest/vineyards`  
+  _Request_: `Vineyard`
+    Fields: id, extId, name, code, grower, region, adminAgridDivision, subRegion
+  _Response_: `VineyardResponse`
+    Fields: data
+
+### Identity
+
+**GET** `/identity/parties`  
+  Search parties in vintrace
+  _Params_: governmentNumbers, roles
+  _Response_: `GetPartiesSuccessResponse`
+
+**POST** `/identity/parties`  
+  Upsert a party into vintrace.
+  _Request_: `Party`
+    Fields: id, extId, roles, organizationName, givenName, surname, contactNumbers, email, address, postalAddress, billingAddress, governmentNumber
+  _Response_: `UpsertPartySuccessResponse`
+    Fields: data
+
+### Operation
+
+**GET** `/operation/barrel-treatments`  
+  Get barrel move shipments
+  _Params_: PaginationLimit, PaginationOffset, ModifiedSince, ModifiedBefore, treatment
+  _Response_: `GetBarrelTreatmentsSuccessResponse`
+
+**POST** `/operation/barrels-movements`  
+  move barrels
+  _Request_: `MoveBarrelsRequest`
+  _Response_: `MoveBarrelsResponse`
+    Fields: data
+
+**POST** `/operation/bookings`  
+  Upsert this booking into vintrace.
+  _Request_: `Booking`
+    Fields: id, bookingNumber, bookedBy, winery, block, grower, vineyard, variety, region, subRegion, appellations, vintage, growerContract, intendedProduct, expectedTime
+    (+25 more)
+  _Response_: `CreateBookingSuccessResponse`
+    Fields: data
+
+**POST** `/operation/bookings/{bookingId}/deactivation`  
+  Deactivate this booking record
+  _Request_: `BookingDeactivationResponse`
+    Fields: data
+  _Response_: `BookingDeactivationResponse`
+    Fields: data
+
+**GET** `/operation/bulk-intakes`  
+  Get the bulk intake records in the system
+  _Params_: PaginationLimit, PaginationOffset, ModifiedSince, ModifiedBefore, purchaseReference
+  _Response_: `GetBulkIntakesSuccessResponse`
+
+**POST** `/operation/bulk-intakes`  
+  Create a new bulk intake
+  _Request_: `BulkIntakeRequest`
+    Fields: occurredTime, wineDetails, composition, cost, deliveryDetails, metrics
+  _Response_: `CreateBulkIntakeSuccessResponse`
+    Fields: data
+
+**PATCH** `/operation/bulk-intakes/{id}`  
+  Partially update some fields in the bulk intake record
+  _Params_: VintraceEntityId
+  _Response_: 204 (No Content)
+
+**POST** `/operation/fruit-intakes`  
+  Record a new fruit intake transaction
+  _Request_: `FruitIntakeRequest`
+    Fields: linkEarliestBooking
+  _Response_: `CreateFruitIntakeSuccessResponse`
+    Fields: data
+
+**PUT** `/operation/fruit-intakes/{fruitIntakeId}/metrics`  
+  Update the metrics for this fruit intake record
+  _Request_: `UpdateMetrics`
+    Fields: metrics
+  _Response_: `UpdateMetricsResponse`
+    Fields: data
+
+**PUT** `/operation/fruit-intakes/{fruitIntakeId}/pricing`  
+  Update the pricing related data for this fruit intake record
+  _Request_: `UpdateFruitIntakePricing`
+    Fields: gross, tare, net, unitPrice
+  _Response_: `UpdateFruitIntakePricingResponse`
+    Fields: data
+
+**PUT** `/operation/operation/documents`  
+  Upload a file to an operation
+  _Request_: `AttachDocumentsRequest`
+    Fields: processId, documentIds
+  _Response_: `AttachDocumentsSuccessResponse`
+    Fields: documents, process
+
+**GET** `/operation/shipments`  
+  Get all shipments in the system
+  _Params_: PaginationLimit, PaginationOffset, ModifiedSince, ModifiedBefore, type, dispatchType, freightCode, include
+  _Response_: `GetShipmentsSuccessResponse`
+
+**GET** `/operation/tirage/{operationId}`  
+  Get a tirage operation information in the system
+  _Params_: OperationId
+  _Response_: `TirageSuccessResponse`
+    Fields: data
+
+**PATCH** `/operation/tirage/{operationId}`  
+  Partially update fields in the tirage record
+  _Params_: OperationId
+  _Response_: 204 (No Content)
+
+**GET** `/operation/trial-blends`  
+  Get the trial blend records in the system
+  _Params_: PaginationLimit, PaginationOffset, ModifiedSince, ModifiedBefore, status, compositionSummaryBy
+  _Response_: `GetTrialBlendsSuccessResponse`
+
+**GET** `/operation/wine-batches`  
+  Get a list of wine batches in the system
+  _Params_: PaginationLimit, PaginationOffset, VintraceEntityIds, include
+  _Response_: `GetWineBatchSuccessResponse`
+
+**POST** `/operation/wine-batches`  
+  Create a wine batch
+  _Request_: `CreateWineBatchRequest`
+  _Response_: `CreateWineBatchSuccessResponse`
+    Fields: data
+
+**GET** `/operation/work-orders`  
+  Get all the work orders in the system
+  _Params_: PaginationOffset, PaginationLimit, scheduledSince, scheduledBefore, status, operationTypes
+  _Response_: `GetWorkOrdersSuccessResponse`
+
+### Stock
+
+**GET** `/stock/dispatches`  
+  Get all stock dispatches
+  _Params_: PaginationLimit, PaginationOffset
+  _Response_: `GetStockDispatchesSuccessResponse`
+
+**POST** `/stock/receivals`  
+  Perform a receive stock operation in the system.
+  _Request_: `ReceiveStockActionSchema`
+  _Response_: `ReceiveStockActionResponse`
+    Fields: data
+
+### Account
+
+**POST** `/account/purchase-orders`  
+  Create or update a purchase order with lines in the system
+  _Request_: `PurchaseOrder`
+    Fields: id, name, vendor, vendorReference, deliverBy, state, fulfillment, winery, taxPolicy, freightCost, inactive, notes, lines
+  _Response_: `PurchaseOrderSuccessResponse`
+    Fields: data
+
+**GET** `/account/purchase-orders/{id}`  
+  Get the details of a purchase order.
+  _Params_: VintraceEntityId
+  _Response_: `PurchaseOrderSuccessResponse`
+    Fields: data
+
+### Costs
+
+**GET** `/costs/business-unit-transactions`  
+  Return bulk wine cost movements between two dates
+  _Params_: PaginationLimit, PaginationOffset, StartDate, EndDate, BusinessUnit, WineryName, WineryId
+  _Response_: `GetBusinessUnitTransactionsResponse`
+
+### Report
+
+**GET** `/report/vessel-details-report`  
+  Return vessel and contents details for bulk wines at a specified date/time
+  _Params_: PaginationLimit, PaginationOffset, ReportDate, BusinessUnit, WineBatchCode, VesselCode, Owner, ExtraFields, VesselId, ProductId, WineryId, WineryName, VesselType
+  _Response_: `GetBulkWineDetailsReportResponse`
+    Fields: results
+
+### Vessel
+
+**GET** `/vessel/barrel-groups/{id}`  
+  Get the details of a barrel group
+  _Response_: `BarrelGroupSuccessResponse`
+    Fields: data
+
+**GET** `/vessel/barrels/{id}`  
+  Get the details of a barrel
+  _Response_: `BarrelSuccessResponse`
+    Fields: data
+
+**GET** `/vessel/bins/{id}`  
+  Get the details of a bin
+  _Response_: `BinSuccessResponse`
+    Fields: data
+
+**GET** `/vessel/tankers/{id}`  
+  Get the details of a tanker
+  _Response_: `TankerSuccessResponse`
+    Fields: data
+
+**POST** `/vessel/tanks`  
+  create a tank
+  _Request_: `TankCreateRequest`
+  _Response_: `TankSuccessResponse`
+    Fields: data
+
+**GET** `/vessel/tanks/{id}`  
+  Get the details of a tank
+  _Response_: `TankSuccessResponse`
+    Fields: data
+
+## Key Schemas
+
+Schemas with at least 3 properties:
+
+
+### AdditionOps (12 fields)
+
+- `vesselId`: integer
+- `vesselName`: string
+- `batchId`: integer
+- `batchName`: string
+- `templateId`: integer
+- `templateName`: string
+- `changeToState`: string
+- `volume`: string
+- `amount`: number
+- `unit`: string
+- `lotNumbers`: array
+- `additive`: ref
+
+### Address (8 fields)
+
+- `id`: integer
+- `mailingName`: string
+- `street1`: string
+- `street2`: string
+- `city`: string
+- `state`: string
+- `postalCode`: string
+- `country`: string
+
+### AnalysisOps (7 fields)
+
+- `vesselId`: integer
+- `vesselName`: string
+- `batchId`: integer
+- `batchName`: string
+- `templateId`: integer
+- `templateName`: string
+- `metrics`: array
+
+### AssignWorkData (5 fields)
+
+- `workOrderId`: integer
+- `jobId`: integer
+- `dateStarted`: string
+- `assignOperatorId`: integer
+- `reassignWorkOrder`: boolean
+
+### AssignWorkResponse (4 fields)
+
+- `status`: string
+- `message`: string
+- `jobEndpointURL`: string
+- `workOrderEndpointURL`: string
+
+### Attachment (10 fields)
+
+- `id`: integer
+- `fileName`: string
+- `fileType`: string
+- `contentType`: string
+- `fileContext`: string
+- `viewEndpoint`: string
+- `thumbEndpoint`: string
+- `dateStamp`: string
+- `fileSize`: number
+- `fileLocation`: ref
+
+### Barrel (19 fields)
+
+- `cooper`: ?
+- `forest`: ?
+- `seasoning`: ref
+- `seasoningMonths`: integer
+- `toasting`: string
+- `toastedHeads`: boolean
+- `grain`: string
+- `lastContained`: ?
+- `oakType`: ref
+- `year`: integer
+- `barrelCategory`: ?
+- `location`: ref
+- `barrelType`: ref
+- `barrelGroups`: array
+- `constructionMaterial`: string
+- `currentBillOfLadingDetails`: string
+- `dspAccount`: ref
+- `recount`: boolean
+- `lastFilledDate`: integer
+
+### BarrelGroup (6 fields)
+
+- `barrels`: array
+- `locations`: array
+- `instructions`: string
+- `beenUsed`: boolean
+- `currentBillOfLadingDetails`: string
+- `lastFilledDate`: integer
+
+### BarrelTreatmentData (10 fields)
+
+- `treatment`: ref
+- `barrels`: array
+- `totalWeight`: ref
+- `scale`: ref
+- `carrier`: ref
+- `party`: ref
+- `source`: ref
+- `reference`: string
+- `bolCode`: string
+- `freightCode`: ?
+
+### BarrelTreatmentType (4 fields)
+
+- `id`: integer
+- `name`: string
+- `barrelState`: ref
+- `bolRequired`: boolean
+
+### BasicBatchDetails (5 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+
+### BeverageTypeProperties (5 fields)
+
+- `iconColour`: string
+- `statusCharacter`: string
+- `statusString`: string
+- `textColour`: string
+- `linkedBeverageType`: ref
+
+### Bin (9 fields)
+
+- `tareWeight`: ref
+- `commonTare`: boolean
+- `commonTareCertificateNumber`: string
+- `canAdjustTare`: boolean
+- `maxBottles`: integer
+- `bottlesInUse`: integer
+- `location`: ref
+- `stackMultiplier`: integer
+- `dspAccount`: ref
+
+### Block (38 fields)
+
+- `name`: string
+- `estate`: boolean
+- `vineyard`: ?
+- `variety`: ?
+- `countyCode`: string
+- `inactive`: boolean
+- `noOfVines`: integer
+- `area`: number
+- `rootStock`: ?
+- `clone`: ?
+- `vineSpacing`: string
+- `rowSpacing`: string
+- `soilProfile`: string
+- `trellis`: object
+- `aspect`: ref
+- `plantedTime`: integer
+- `pruningType`: ref
+- `averageGradient`: number
+- `irrigationType`: string
+- `frostProtection`: string
+- `organic`: boolean
+- `organicCertifiedTime`: integer
+- `township`: string
+- `range`: string
+- `section`: string
+- `emitterRate`: number
+- `emitterSize`: string
+- `siteId`: string
+- `noOfRows`: integer
+- `districtCode`: string
+- `regionalAdminCode`: string
+- `comments`: string
+- `code`: string
+- `defaultHarvestMethod`: string
+- `graftedDate`: integer
+- `intendedUse`: ref
+- `rowNumbers`: string
+- `vineStructure`: ?
+
+### BlockAssessmentOverview (8 fields)
+
+- `id`: integer
+- `block`: ref
+- `vintage`: integer
+- `assessmentTime`: integer
+- `assessedBy`: ref
+- `producingForecast`: ref
+- `availableForecast`: ref
+- `createdAt`: integer
+
+### BlockData (12 fields)
+
+- `code`: string
+- `grower`: ?
+- `vineyard`: ?
+- `region`: ?
+- `subRegion`: ?
+- `variety`: ?
+- `rowNumbers`: string
+- `estate`: boolean
+- `intendedUse`: ref
+- `grading`: ?
+- `inactive`: boolean
+- `fruitPlacement`: ?
+
+### Booking (40 fields)
+
+- `id`: integer
+- `bookingNumber`: string
+- `bookedBy`: ?
+- `winery`: ?
+- `block`: ?
+- `grower`: ?
+- `vineyard`: ?
+- `variety`: ?
+- `region`: ?
+- `subRegion`: ?
+- `appellations`: array
+- `vintage`: integer
+- `growerContract`: ?
+- `intendedProduct`: ?
+- `expectedTime`: integer
+- `expectedEndTime`: integer
+- `expectedDurationInMinutes`: integer
+- `expectedQuantity`: ?
+- `bookingState`: ref
+- `harvester`: ?
+- `note`: string
+- `crusher`: ?
+- `owner`: ref
+- `carrier`: ?
+- `receivingScales`: ?
+- `receivingVessel`: ?
+- `harvestMethod`: object
+- `referenceNumber`: string
+- `pickTime`: integer
+- `program`: ?
+- `intendedUse`: ?
+- `numberOfLoads`: integer
+- `areaEstimate`: number
+- `deliveryType`: ?
+- `pmsRate`: ?
+- `serviceOrder`: ?
+- `grading`: ref
+- `inactive`: boolean
+- `bulkBooking`: boolean
+- `lastBooking`: boolean
+
+### BrandAllocation (8 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `geographicIndicator`: string
+- `owner`: string
+- `winery`: string
+
+### BulkIntake (8 fields)
+
+- `id`: integer
+- `occurredTime`: integer
+- `reversed`: boolean
+- `wineDetails`: ref
+- `composition`: array
+- `cost`: number
+- `deliveryDetails`: ref
+- `metrics`: array
+
+### BulkIntakeRequest (6 fields)
+
+- `occurredTime`: integer
+- `wineDetails`: ref
+- `composition`: array
+- `cost`: number
+- `deliveryDetails`: ref
+- `metrics`: array
+
+### BulkStock (6 fields)
+
+- `grading`: ?
+- `totalVolume`: ?
+- `compWeighting`: number
+- `equivalentVolume`: ?
+- `equivalentWeight`: ?
+- `percentageOfFruit`: number
+
+### BulkWineDetails (21 fields)
+
+- `id`: integer
+- `productId`: integer
+- `name`: string
+- `vesselType`: string
+- `detailsAsAt`: integer
+- `sparklingInfo`: object
+- `beverageType`: ?
+- `owner`: ?
+- `winery`: ref
+- `wineBatch`: ?
+- `productState`: number
+- `volume`: ?
+- `capacity`: ?
+- `ullage`: ?
+- `ttbDetails`: ?
+- `liveMetrics`: array
+- `cost`: ?
+- `composition`: array
+- `allocations`: array
+- `unallocatedVolume`: ?
+- `unallocatedPercentageOfVessel`: number
+
+### Codeable (4 fields)
+
+- `id`: integer
+- `name`: string
+- `shortCode`: string
+- `externalCode`: string
+
+### Components (3 fields)
+
+- `quantity`: integer
+- `unit`: string
+- `item`: ref
+
+### Composition (8 fields)
+
+- `percentage`: number
+- `weighting`: number
+- `vintage`: integer
+- `block`: ?
+- `region`: ?
+- `subRegion`: ?
+- `variety`: ?
+- `componentVolume`: ref
+
+### CompositionSlice (8 fields)
+
+- `weighting`: number
+- `percentage`: number
+- `componentVolume`: ?
+- `vintage`: string
+- `block`: ?
+- `region`: ?
+- `subRegion`: ?
+- `variety`: ?
+
+### Cost (4 fields)
+
+- `amount`: number
+- `rate`: string
+- `freight`: number
+- `ttbDetails`: ?
+
+### DeliveryDetails (13 fields)
+
+- `purchaseOrder`: ref
+- `receivedFrom`: ref
+- `carrier`: ref
+- `shippingRefNo`: string
+- `truckNo`: string
+- `driverName`: string
+- `sealNo`: string
+- `compartmentNo`: string
+- `cipNo`: string
+- `container`: string
+- `customsEntryNumber`: string
+- `purchaseReference`: string
+- `deliveryState`: string
+
+### DipTable (5 fields)
+
+- `id`: integer
+- `version`: integer
+- `tickResolution`: number
+- `volumeResolution`: number
+- `dipMeasurementType`: ref
+
+### DispatchedStockItemData (3 fields)
+
+- `item`: ref
+- `quantity`: ref
+- `routeDetails`: array
+
+### Distribution (13 fields)
+
+- `id`: integer
+- `itemCode`: string
+- `qty`: integer
+- `available`: integer
+- `areaName`: string
+- `areaId`: integer
+- `buildingName`: string
+- `wineryName`: string
+- `bay`: string
+- `lotCode`: string
+- `bondName`: string
+- `bondNumber`: string
+- `taxState`: string
+
+### FieldValuePair (6 fields)
+
+- `field`: string
+- `value`: string
+- `fieldId`: integer
+- `canEdit`: boolean
+- `canDeselect`: boolean
+- `editableFieldType`: string
+
+### FinalProduct (6 fields)
+
+- `id`: integer
+- `name`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `geographicIndicator`: string
+
+### FromVessel (6 fields)
+
+- `name`: string
+- `id`: integer
+- `beforeDetails`: ref
+- `afterDetails`: ref
+- `volOut`: integer
+- `volOutUnit`: string
+
+### FruitIntake (27 fields)
+
+- `id`: integer
+- `block`: ?
+- `vintage`: integer
+- `bookingNumber`: string
+- `owner`: ref
+- `dateOccurred`: integer
+- `timeIn`: integer
+- `timeOut`: integer
+- `weighTag`: string
+- `externalWeighTag`: string
+- `winery`: ?
+- `scale`: ?
+- `gross`: ?
+- `tare`: ?
+- `net`: ?
+- `jobStatus`: object
+- `intendedProduct`: ?
+- `unitPrice`: ?
+- `metrics`: array
+- `harvestMethod`: object
+- `weighMasterText`: string
+- `carrier`: ref
+- `consignmentNote`: string
+- `driverName`: string
+- `lastLoad`: boolean
+- `operatorNotes`: string
+- `truckRegistration`: string
+
+### FullBlockAssessment (24 fields)
+
+- `id`: integer
+- `block`: ref
+- `vintage`: integer
+- `assessmentDate`: string
+- `assessedBy`: ref
+- `producingForecast`: ref
+- `availableForecast`: ref
+- `intendedUse`: ref
+- `harvestMethod`: string
+- `expectedHarvestDate`: integer
+- `earliestHarvestDate`: integer
+- `grading`: ref
+- `expectedProgram`: ref
+- `contract`: ref
+- `sprayReportReceived`: integer
+- `sprayReportAttachment`: ref
+- `capitalBlock`: boolean
+- `capitalProjectNumber`: string
+- `cropInspected`: integer
+- `comments`: string
+- `exceptionList`: array
+- `intendedProduct`: ref
+- `attachments`: ref
+- `locationDetails`: ref
+
+### FullBlockAssessmentRequest (24 fields)
+
+- `id`: integer
+- `block`: ref
+- `vintage`: integer
+- `assessmentDate`: string
+- `assessedBy`: ref
+- `producingForecast`: ref
+- `availableForecast`: ref
+- `intendedUse`: ref
+- `harvestMethod`: string
+- `expectedHarvestDate`: integer
+- `earliestHarvestDate`: integer
+- `grading`: ref
+- `expectedProgram`: ref
+- `contract`: ref
+- `sprayReportReceived`: integer
+- `sprayReportAttachment`: ref
+- `capitalBlock`: boolean
+- `capitalProjectNumber`: string
+- `cropInspected`: integer
+- `comments`: string
+- `exceptionList`: array
+- `intendedProduct`: ref
+- `attachments`: ref
+- `locationDetails`: ref
+
+### Grading (4 fields)
+
+- `id`: integer
+- `value`: string
+- `scaleName`: string
+- `scaleId`: integer
+
+### IntakeOperation (35 fields)
+
+- `operationId`: integer
+- `processId`: integer
+- `reversed`: boolean
+- `effectiveDate`: integer
+- `modified`: integer
+- `bookingNumber`: string
+- `block`: ref
+- `vineyard`: ref
+- `winery`: string
+- `grower`: ref
+- `region`: ref
+- `variety`: ref
+- `owner`: ref
+- `vintage`: integer
+- `deliveryStart`: integer
+- `deliveryEnd`: integer
+- `driverName`: string
+- `truckRegistration`: string
+- `carrier`: ref
+- `consignmentNote`: string
+- `docketNo`: string
+- `amount`: number
+- `grossAmount`: ref
+- `tareAmount`: ref
+- `metrics`: array
+- `mog`: ref
+- `harvestMethod`: string
+- `intendedUse`: ref
+- `growerContract`: ref
+- `lastLoad`: boolean
+- `fruitCost`: number
+- `fruitCostRateType`: string
+- `area`: number
+- `additionalDetails`: object
+- `externalWeighTag`: string
+
+### IntakeOperationSearchResponse (6 fields)
+
+- `status`: string
+- `message`: string
+- `resultCount`: integer
+- `resultLimit`: integer
+- `nextResult`: integer
+- `intakes`: array
+
+### InventorySummary (62 fields)
+
+- `date`: integer
+- `dateAsText`: string
+- `winery`: string
+- `quantity`: integer
+- `committed`: integer
+- `onOrder`: integer
+- `available`: integer
+- `unit`: string
+- `code`: string
+- `name`: string
+- `lotBatch`: string
+- `lotExpiryDate`: string
+- `lotExpiryDateAsText`: string
+- `lotManufactureDate`: string
+- `lotManufactureDateAsText`: string
+- `reorderCode`: string
+- `location`: string
+- `stockCategory`: string
+- `grading`: ref
+- `price`: string
+- `priceAsText`: string
+- `taxClass`: string
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `taxState`: string
+- `bond`: string
+- `sizeRatio`: string
+- `finalProducts`: string
+- `vintage`: string
+- `variety`: string
+- `region`: string
+- `program`: string
+- `productState`: string
+- `beverageType`: string
+- `baseMaterial`: string
+- `owner`: string
+- `assetAccount`: string
+- `cogsAccount`: string
+- `unitCost`: number
+- `unitCostAsText`: string
+- `totalCost`: number
+- `totalCostAsText`: string
+- `fruitCost`: string
+- `fruitCostAsText`: string
+- `bulkCost`: string
+- `bulkCostAsText`: string
+- `additiveCost`: string
+- `additiveCostAsText`: string
+- `operationCost`: string
+- `operationCostAsText`: string
+- `packagingCost`: string
+- `packagingCostAsText`: string
+- `storageCost`: string
+- `storageCostAsText`: string
+- `overheadCost`: string
+- `overheadCostAsText`: string
+- `freightCost`: string
+- `freightCostAsText`: string
+- `otherCost`: string
+- `otherCostAsText`: string
+- `sku`: string
+- `stockItemDetailsEndpoint`: string
+
+### InventorySummaryResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `inventorySummaries`: array
+
+### ItemSummary (3 fields)
+
+- `id`: integer
+- `itemType`: string
+- `code`: string
+
+### Job (19 fields)
+
+- `id`: integer
+- `code`: string
+- `scheduledDate`: integer
+- `finishedDate`: string
+- `scheduledDateAsText`: string
+- `finishedDateAsText`: string
+- `status`: string
+- `assignedBy`: string
+- `assignedTo`: string
+- `summaryText`: string
+- `miniSummaryText`: string
+- `jobColour`: string
+- `jobNumber`: integer
+- `stepText`: string
+- `steps`: array
+- `endpointURL`: string
+- `jobVersion`: integer
+- `workOrderId`: integer
+- `operationType`: string
+
+### JobField (9 fields)
+
+- `fieldId`: string
+- `fieldName`: string
+- `fieldType`: string
+- `dataType`: string
+- `mandatory`: boolean
+- `minSelections`: integer
+- `maxSelections`: integer
+- `selectedValues`: array
+- `stringValue`: string
+
+### JobFieldValue (12 fields)
+
+- `id`: integer
+- `name`: string
+- `dataType`: string
+- `code`: string
+- `fillType`: string
+- `fillTypeDisplay`: string
+- `confirmed`: boolean
+- `amount`: string
+- `extraDetailKey`: string
+- `preferred`: boolean
+- `breakdownMap`: array
+- `additionalDetails`: array
+
+### JobStep (6 fields)
+
+- `stepId`: integer
+- `stepNumber`: integer
+- `stepName`: string
+- `instructionText`: string
+- `fields`: array
+- `endpointURL`: string
+
+### LocationDetails (3 fields)
+
+- `latitude`: number
+- `longitude`: number
+- `formattedAddress`: string
+
+### LossDetails (3 fields)
+
+- `volume`: integer
+- `volumeUnit`: string
+- `reason`: string
+
+### MetricAnalysis (5 fields)
+
+- `id`: integer
+- `name`: string
+- `value`: number
+- `txtValue`: string
+- `unit`: string
+
+### MoveBarrels (8 fields)
+
+- `userActions`: array
+- `occurredTime`: integer
+- `operator`: ?
+- `operatorNotes`: string
+- `documentIds`: array
+- `targetBatch`: string
+- `additionalInstructions`: string
+- `movements`: array
+
+### Party (12 fields)
+
+- `id`: integer
+- `extId`: string
+- `roles`: array
+- `organizationName`: string
+- `givenName`: string
+- `surname`: string
+- `contactNumbers`: array
+- `email`: string
+- `address`: ref
+- `postalAddress`: ref
+- `billingAddress`: ref
+- `governmentNumber`: string
+
+### PartyResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `parties`: array
+
+### PartyUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `party`: ref
+
+### PhoneNumber (4 fields)
+
+- `id`: integer
+- `areaCode`: string
+- `number`: string
+- `extension`: string
+
+### PmsRate (3 fields)
+
+- `id`: integer
+- `value`: number
+- `unit`: string
+
+### Product (21 fields)
+
+- `id`: integer
+- `batchCode`: string
+- `vesselId`: integer
+- `descriptionCanEdit`: boolean
+- `volume`: object
+- `vesselCode`: string
+- `hasDipTable`: boolean
+- `dipTableEndpoint`: string
+- `colour`: string
+- `physicalProductState`: string
+- `vesselType`: string
+- `productStatus`: string
+- `productAnalysisEndpoint`: string
+- `productCompositionEndpoint`: string
+- `productEndpoint`: string
+- `liveMetrics`: array
+- `fieldValuePairs`: array
+- `canAccessNotes`: boolean
+- `notesCount`: integer
+- `notesEndpoint`: string
+- `beverageTypeProperties`: ref
+
+### ProductCompositonData (5 fields)
+
+- `key`: string
+- `value`: number
+- `valueStr`: string
+- `volume`: string
+- `unit`: string
+
+### ProductLiveMetric (8 fields)
+
+- `id`: integer
+- `name`: string
+- `unit`: string
+- `dataType`: string
+- `dataTypeValues`: string
+- `minVal`: integer
+- `maxVal`: integer
+- `measurements`: array
+
+### ProductLiveMetricMeasurement (6 fields)
+
+- `value`: string
+- `rateOfChange`: ref
+- `measurementDateText`: string
+- `measurementDate`: integer
+- `resultId`: integer
+- `canDelete`: boolean
+
+### ProductResponse (3 fields)
+
+- `status`: string
+- `product`: ref
+- `vessel`: ref
+
+### ProductUpdateData (3 fields)
+
+- `productId`: integer
+- `effectiveDate`: string
+- `updateFields`: array
+
+### ProductUpdateField (3 fields)
+
+- `propertyType`: string
+- `propertyValue`: string
+- `propertyId`: integer
+
+### ProductUpdateResponse (3 fields)
+
+- `status`: string
+- `errorList`: array
+- `product`: ref
+
+### PurchaseOrder (13 fields)
+
+- `id`: integer
+- `name`: string
+- `vendor`: object
+- `vendorReference`: string
+- `deliverBy`: integer
+- `state`: ref
+- `fulfillment`: string
+- `winery`: ?
+- `taxPolicy`: string
+- `freightCost`: number
+- `inactive`: boolean
+- `notes`: string
+- `lines`: array
+
+### PurchaseOrderLine (9 fields)
+
+- `id`: integer
+- `lineNumber`: string
+- `itemCode`: string
+- `vendorCode`: string
+- `quantityOrdered`: ?
+- `unitPrice`: number
+- `totalPrice`: number
+- `quantityFulfilled`: ?
+- `taxable`: boolean
+
+### QuantityBreakdown (4 fields)
+
+- `onHand`: integer
+- `committed`: integer
+- `ordered`: integer
+- `available`: integer
+
+### RateOfChangeResponse (4 fields)
+
+- `value`: number
+- `sign`: string
+- `absValue`: number
+- `unit`: string
+
+### Refund (19 fields)
+
+- `id`: integer
+- `name`: string
+- `refundDate`: integer
+- `refundDateAsText`: string
+- `reference`: string
+- `stockReturned`: boolean
+- `storageAreaId`: string
+- `storageAreaName`: string
+- `customerId`: integer
+- `customerName`: string
+- `refundStatus`: string
+- `notes`: string
+- `salesOrderId`: integer
+- `salesOrderName`: string
+- `subTotal`: number
+- `total`: number
+- `taxBreakdown`: array
+- `refundLineItems`: array
+- `posSaleReference`: string
+
+### RefundLineItem (7 fields)
+
+- `id`: integer
+- `itemId`: integer
+- `itemName`: string
+- `unitPrice`: integer
+- `returnQuantity`: integer
+- `returnTotal`: integer
+- `taxAmount`: number
+
+### RefundResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `refund`: array
+
+### RefundUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `refund`: ref
+
+### ResourceLink (3 fields)
+
+- `href`: string
+- `rel`: string
+- `method`: string
+
+### RouteStockItem (3 fields)
+
+- `quantity`: number
+- `storageArea`: ?
+- `bin`: string
+
+### SalesOrder (33 fields)
+
+- `id`: integer
+- `invoiceDate`: string
+- `invoiceDateAsText`: string
+- `customerId`: integer
+- `customerName`: string
+- `sendTo`: ref
+- `salesType`: string
+- `salesPriceListId`: integer
+- `salesPriceListName`: string
+- `priceDetails`: ref
+- `salesOrderStatus`: string
+- `salesOrderItems`: array
+- `code`: string
+- `reference`: string
+- `orderDate`: integer
+- `orderDateAsText`: string
+- `wineryId`: string
+- `wineryName`: string
+- `fulfillment`: string
+- `fulfillmentDate`: string
+- `fulfillmentDateAsText`: string
+- `salesRegionId`: string
+- `salesRegionCode`: string
+- `notes`: string
+- `customerPickup`: boolean
+- `disableAccountsSync`: boolean
+- `subTotal`: integer
+- `taxBreakdown`: array
+- `total`: integer
+- `acctReference`: string
+- `posSaleReference`: string
+- `ignoreStockError`: boolean
+- `externalTransactionId`: string
+
+### SalesOrderItem (16 fields)
+
+- `id`: integer
+- `itemId`: integer
+- `itemName`: string
+- `unitPrice`: number
+- `quantity`: integer
+- `unitOfMeasure`: string
+- `discountPct`: string
+- `adjustment`: string
+- `taxAmount`: number
+- `lineTotal`: integer
+- `accountId`: integer
+- `accountCode`: string
+- `taxRateId`: integer
+- `taxRateName`: string
+- `sku`: string
+- `externalReference`: string
+
+### SalesOrderResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `salesOrders`: array
+
+### SalesOrderUpdateResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `salesOrders`: ref
+
+### SampleOperation (22 fields)
+
+- `operationId`: integer
+- `processId`: integer
+- `reversed`: boolean
+- `modified`: integer
+- `block`: ref
+- `vineyard`: ref
+- `grower`: ref
+- `region`: ref
+- `variety`: ref
+- `owner`: ref
+- `vintage`: integer
+- `recordedDate`: integer
+- `reference`: string
+- `row`: string
+- `vine`: string
+- `grading`: ref
+- `sampleArea`: string
+- `sampleType`: string
+- `laboratory`: ref
+- `analysisTemplate`: ref
+- `metrics`: array
+- `additionalDetails`: object
+
+### SampleOperationSearchResponse (6 fields)
+
+- `status`: string
+- `message`: string
+- `resultCount`: integer
+- `resultLimit`: integer
+- `nextResult`: integer
+- `samples`: array
+
+### ScheduleOperationDetails (7 fields)
+
+- `id`: integer
+- `workOrderNumber`: string
+- `jobNumber`: integer
+- `occurredTime`: integer
+- `modifiedTime`: integer
+- `operator`: ref
+- `reversed`: boolean
+
+### Searchable (3 fields)
+
+- `id`: integer
+- `name`: string
+- `summary`: string
+
+### ShipmentBarrelDetails (3 fields)
+
+- `id`: integer
+- `name`: string
+- `capacity`: ref
+
+### ShipmentData (14 fields)
+
+- `id`: integer
+- `workOrderNumber`: string
+- `jobNumber`: string
+- `shipmentNumber`: string
+- `source`: ref
+- `destination`: ref
+- `occurredTime`: integer
+- `modifiedTime`: integer
+- `wineDetails`: array
+- `carrier`: ref
+- `reference`: string
+- `dispatchType`: ?
+- `freightCode`: ?
+- `reversed`: boolean
+
+### ShipmentWineDetails (12 fields)
+
+- `vessel`: string
+- `batch`: string
+- `wineBatch`: ?
+- `wineryBuilding`: ref
+- `volume`: ?
+- `loss`: ref
+- `bottlingDetails`: string
+- `weight`: ?
+- `cost`: ref
+- `allocations`: array
+- `metrics`: array
+- `composition`: array
+
+### SimpleMetric (6 fields)
+
+- `metricName`: string
+- `metricShortCode`: string
+- `value`: string
+- `unit`: string
+- `recorded`: string
+- `metricId`: integer
+
+### SimpleSearchResponse (6 fields)
+
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `nextURLPath`: string
+- `prevURLPath`: string
+- `simpleSearchResults`: array
+
+### SimpleSearchResult (4 fields)
+
+- `id`: integer
+- `name`: string
+- `summary`: string
+- `additionalDetails`: object
+
+### StockBulkInfoDetail (5 fields)
+
+- `endpoint`: string
+- `message`: string
+- `metrics`: array
+- `compositionDetails`: array
+- `additionsSummary`: array
+
+### StockDispatchData (5 fields)
+
+- `source`: ?
+- `destination`: ?
+- `dispatchType`: ?
+- `stockItems`: array
+- `shippingInfo`: ?
+
+### StockDispatchShippingInfoData (16 fields)
+
+- `carrier`: ref
+- `vendor`: ref
+- `containerTypes`: string
+- `reference`: string
+- `port`: string
+- `packingConfig`: string
+- `orderNo`: string
+- `truckNo`: string
+- `containerNo`: string
+- `sentBy`: ref
+- `driverName`: string
+- `sealNo`: string
+- `freightCode`: ref
+- `scale`: ref
+- `totalWeight`: ref
+- `shippingRemarks`: string
+
+### StockDistributionItem (10 fields)
+
+- `id`: integer
+- `item`: ref
+- `winery`: string
+- `building`: ref
+- `storageArea`: ref
+- `bay`: string
+- `unit`: string
+- `quantity`: integer
+- `taxState`: string
+- `virtual`: boolean
+
+### StockHistoryItem (11 fields)
+
+- `operationId`: integer
+- `operatorName`: string
+- `quantity`: integer
+- `balance`: integer
+- `date`: integer
+- `workorder`: ref
+- `actionType`: string
+- `batch`: string
+- `item`: ref
+- `attachments`: array
+- `canReverse`: boolean
+
+### StockHistoryItemsDetail (5 fields)
+
+- `endpoint`: string
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `historyItems`: array
+
+### StockItem (21 fields)
+
+- `id`: integer
+- `code`: string
+- `name`: string
+- `inactive`: boolean
+- `modified`: integer
+- `category`: ref
+- `beverageProperties`: ref
+- `unit`: string
+- `quantity`: integer
+- `owner`: string
+- `wineProduct`: boolean
+- `lotTracked`: boolean
+- `levelTracked`: boolean
+- `tags`: array
+- `userPermissions`: array
+- `fields`: array
+- `distributions`: array
+- `historyItems`: array
+- `rawComponents`: array
+- `bulkInfo`: ref
+- `notes`: array
+
+### StockItemBasics (3 fields)
+
+- `id`: integer
+- `code`: string
+- `endpoint`: string
+
+### StockItemDetails (20 fields)
+
+- `id`: integer
+- `code`: string
+- `itemType`: string
+- `unit`: string
+- `owner`: string
+- `assetAccount`: string
+- `cogsAccount`: string
+- `category`: ref
+- `product`: ref
+- `brand`: ref
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `rawTaxClass`: string
+- `sku`: string
+- `labelAlcohol`: integer
+- `lotTracked`: boolean
+- `levelTracked`: boolean
+- `subComponents`: array
+- `rawComponents`: array
+- `distributions`: array
+
+### StockNote (9 fields)
+
+- `id`: integer
+- `date`: string
+- `dateText`: string
+- `who`: string
+- `subject`: string
+- `detail`: string
+- `item`: ref
+- `attachments`: array
+- `inactive`: boolean
+
+### StockNotesDetail (7 fields)
+
+- `endpoint`: string
+- `maxResult`: integer
+- `firstResult`: integer
+- `totalResultCount`: integer
+- `prevURLPath`: string
+- `nextURLPath`: string
+- `notes`: array
+
+### StockRawComponentItem (6 fields)
+
+- `endpoint`: string
+- `id`: integer
+- `code`: string
+- `unit`: string
+- `bomQuantity`: number
+- `beverageProperties`: ref
+
+### StockType (4 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `form`: ref
+
+### SubmitJobRequest (5 fields)
+
+- `jobId`: integer
+- `submitType`: string
+- `dateStarted`: string
+- `fields`: array
+- `attachments`: array
+
+### SubmitJobRequestField (5 fields)
+
+- `fieldId`: string
+- `value`: string
+- `dataType`: string
+- `parentFieldId`: string
+- `selectedValues`: array
+
+### SubmitJobRequestFieldValue (7 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `fillType`: string
+- `checked`: boolean
+- `amount`: string
+- `preferred`: boolean
+
+### Tag (3 fields)
+
+- `id`: integer
+- `name`: string
+- `sortIndex`: integer
+
+### Tank (23 fields)
+
+- `headspace`: number
+- `temperature`: number
+- `hasThermostat`: boolean
+- `thermostatSetting`: number
+- `diameter`: number
+- `isRefrigerated`: boolean
+- `isFermenter`: boolean
+- `isInsulated`: boolean
+- `isHeated`: boolean
+- `constructionMaterial`: string
+- `tankCategory`: ?
+- `dspAccount`: ref
+- `allowStaves`: boolean
+- `containsStaves`: boolean
+- `hasAgitator`: boolean
+- `recount`: boolean
+- `accountsReference`: string
+- `depreciationStartDate`: integer
+- `depreciationEndDate`: integer
+- `purchaseOrderNumber`: string
+- `financialReference`: string
+- `vendor`: ref
+- `dipTables`: array
+
+### Tanker (5 fields)
+
+- `truckNumber`: string
+- `sealNumber`: string
+- `compartmentNumber`: string
+- `cleanInPlaceNumber`: string
+- `currentBillOfLadingDetails`: string
+
+### TaxAmount (4 fields)
+
+- `name`: string
+- `amount`: number
+- `ratePct`: integer
+- `inclusive`: boolean
+
+### TaxDetails (4 fields)
+
+- `bond`: ?
+- `taxState`: string
+- `taxClass`: string
+- `alcoholPercentage`: number
+
+### TaxState (4 fields)
+
+- `id`: integer
+- `name`: string
+- `code`: string
+- `defaultForInventory`: boolean
+
+### Tirage (5 fields)
+
+- `groupName`: string
+- `sourceWine`: ref
+- `outVolume`: object
+- `loss`: ref
+- `package`: ref
+
+### TiragePackageDetails (4 fields)
+
+- `quantity`: number
+- `tirageItem`: ref
+- `tirageBatch`: string
+- `totalPackagedVolume`: object
+
+### TirageSourceWineDetails (6 fields)
+
+- `vessel`: string
+- `batch`: string
+- `designatedProduct`: ref
+- `productionYear`: string
+- `winery`: ref
+- `wineryBuilding`: ref
+
+### ToVessel (6 fields)
+
+- `name`: string
+- `id`: integer
+- `beforeDetails`: ref
+- `afterDetails`: ref
+- `volIn`: integer
+- `volInUnit`: string
+
+### TransOperation (19 fields)
+
+- `formattedDate`: string
+- `date`: integer
+- `operationId`: integer
+- `operationTypeId`: integer
+- `operationTypeName`: string
+- `subOperationTypeId`: integer
+- `subOperationTypeName`: string
+- `workorder`: string
+- `jobNumber`: string
+- `treatment`: string
+- `assignedBy`: string
+- `completedBy`: string
+- `winery`: string
+- `fromVessel`: ref
+- `toVessel`: ref
+- `lossDetails`: ref
+- `additionOps`: ref
+- `analysisOps`: ref
+- `additionalDetails`: string
+
+### TransactionDetails (26 fields)
+
+- `activityDate`: integer
+- `postedDate`: integer
+- `resultOfCorrection`: boolean
+- `activityId`: string
+- `postedId`: integer
+- `activityType`: string
+- `activitySummary`: string
+- `primaryCostTarget`: string
+- `secondaryCostTarget`: string
+- `primaryWinery`: ?
+- `secondaryWinery`: ?
+- `location`: string
+- `vessel`: string
+- `wineBatch`: string
+- `productCategory`: ?
+- `program`: ?
+- `volumeDelta`: ?
+- `costDelta`: ?
+- `otherWinery`: ?
+- `notes`: string
+- `customer`: ?
+- `vendor`: ?
+- `lossReason`: ?
+- `allocationDescription`: string
+- `impactedAllocations`: object
+- `references`: object
+
+### TransactionSummaryResponse (3 fields)
+
+- `status`: string
+- `message`: string
+- `transactionSummaries`: array
+
+### TrialBlend (12 fields)
+
+- `reference`: string
+- `name`: string
+- `year`: string
+- `winery`: ref
+- `operator`: ref
+- `trialDate`: integer
+- `modifiedTime`: integer
+- `cost`: number
+- `amount`: ?
+- `sampleVolume`: ?
+- `status`: string
+- `composition`: object
+
+### Unit (3 fields)
+
+- `abbreviation`: string
+- `key`: string
+- `precision`: integer
+
+### UpdateFruitIntakePricing (4 fields)
+
+- `gross`: ?
+- `tare`: ?
+- `net`: ?
+- `unitPrice`: ?
+
+### Vessel (20 fields)
+
+- `capacity`: ref
+- `wineryBuilding`: ?
+- `owner`: ?
+- `brand`: string
+- `purchaseDate`: integer
+- `purchasedUsed`: boolean
+- `firstUsedDate`: integer
+- `deliveredDate`: integer
+- `grading`: ?
+- `position`: ref
+- `usageCounter`: integer
+- `dimensions`: ref
+- `inactive`: boolean
+- `sanitationState`: ref
+- `lastSanitation`: integer
+- `assetId`: string
+- `rfid`: string
+- `miscellaneousInfo`: string
+- `controlId`: string
+- `alertState`: boolean
+
+### VesselDetails (14 fields)
+
+- `contentsId`: integer
+- `batch`: string
+- `batchId`: integer
+- `volume`: integer
+- `volumeUnit`: string
+- `dip`: string
+- `state`: string
+- `rawTaxClass`: string
+- `federalTaxClass`: string
+- `stateTaxClass`: string
+- `program`: string
+- `batchDetails`: ref
+- `bondNumber`: string
+- `bondRegisteredName`: string
+
+### VesselDimensions (3 fields)
+
+- `length`: number
+- `width`: number
+- `height`: number
+
+### Vineyard (8 fields)
+
+- `id`: integer
+- `extId`: string
+- `name`: string
+- `code`: string
+- `grower`: ?
+- `region`: ?
+- `adminAgridDivision`: string
+- `subRegion`: ?
+
+### WineBatchData (20 fields)
+
+- `id`: integer
+- `batchCode`: string
+- `batchNumber`: string
+- `productionYear`: integer
+- `owner`: ref
+- `grading`: ref
+- `program`: ref
+- `designatedRegion`: ref
+- `designatedSubRegion`: ref
+- `designatedVariety`: ref
+- `winery`: ref
+- `category`: ref
+- `designatedProduct`: ref
+- `costsTrackedPercentage`: number
+- `ageOfSpirits`: string
+- `serviceOrder`: ref
+- `fractionType`: ref
+- `inactive`: boolean
+- `vessels`: array
+- `allocations`: array
+
+### WineDetails (12 fields)
+
+- `vessel`: string
+- `batch`: string
+- `ownership`: array
+- `volume`: ref
+- `fractionType`: ref
+- `fermentState`: ref
+- `malolacticState`: ref
+- `beverageType`: string
+- `productType`: ref
+- `reference`: string
+- `yieldRate`: number
+- `batchOwner`: ?
+
+### WorkOrder (8 fields)
+
+- `id`: integer
+- `name`: string
+- `assignedTo`: ?
+- `issuedBy`: ?
+- `status`: string
+- `scheduledTime`: integer
+- `summary`: string
+- `jobs`: array
+
+### WorkOrderJob (6 fields)
+
+- `id`: integer
+- `jobNumber`: number
+- `status`: string
+- `scheduledTime`: integer
+- `finishedTime`: integer
+- `link`: ?
+
+### WorkOrderSearchResponse (7 fields)
+
+- `firstResult`: integer
+- `maxResult`: integer
+- `totalResultCount`: integer
+- `nextURLPath`: string
+- `prevURLPath`: string
+- `listText`: string
+- `workOrders`: array
+
+### stockDetailBody (9 fields)
+
+- `stockItemCode`: string
+- `receivedAmount`: ?
+- `price`: number
+- `priceType`: string
+- `vendorCode`: string
+- `lotName`: string
+- `manufacturedDate`: integer
+- `expiryDate`: integer
+- `routeDetails`: array
