@@ -53,7 +53,7 @@ describe('v7.purchaseOrders', () => {
       const client = makeClient();
       const [data, error] = await client.v7.purchaseOrders.get('234234');
       expect(error).toBeNull();
-      expect(data).toEqual(mockResponse);
+      expect(data).toEqual(mockResponse.data);
       const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
       expect(url).toContain('v7/account/purchase-orders/234234');
     });

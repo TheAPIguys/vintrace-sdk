@@ -52,6 +52,8 @@ import type {
   BarrelsMovement,
   BlockData,
   TransactionDetails,
+  PurchaseOrder,
+  PurchaseOrderResponse,
 } from '../validation/schemas';
 import {
   WorkOrderSearchResponseSchema,
@@ -96,6 +98,7 @@ import {
   TirageSuccessResponseSchema,
   CreateBarrelsMovementRequestSchema,
   FruitIntakeRequestSchema,
+  PurchaseOrderResponseSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -1724,8 +1727,15 @@ class PurchaseOrdersClient {
   /**
    * Get purchase order details by id.
    */
-  get(id: string): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>(`v7/account/purchase-orders/${id}`, 'GET');
+  async get(id: string): Promise<VintraceResult<PurchaseOrder>> {
+    const [response, error] = await this.client.request<PurchaseOrderResponse>(
+      `v7/account/purchase-orders/${id}`,
+      'GET',
+      { responseSchema: PurchaseOrderResponseSchema }
+    );
+    if (error) return [null, error];
+    if (!response) return [null, null];
+    return [response.data, null];
   }
 }
 

@@ -45,4 +45,6 @@ export type {
   AnalysisMeasurement,
   RateOfChange,
   CompositionComponent,
+  PurchaseOrder,
+  PurchaseOrderLine,
 } from './validation/schemas';
