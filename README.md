@@ -230,7 +230,7 @@ type VintraceResult<T> =
 | Module              | Status  | Methods                                  |
 | ------------------- | ------- | ---------------------------------------- |
 | Costs               | Ready   | `businessUnitTransactions`               |
-| Blocks              | Partial | `getAll`, `get`, `post`, `patch`         |
+| Blocks              | Ready   | `getAll`, `get`, `post`, `patch`, `createAssessment` |
 | Assessments         | Ready   | `getAll`                                 |
 | Vineyards           | Ready   | `post`                                   |
 | MaturitySamples     | Ready   | `post`                                   |
@@ -245,6 +245,11 @@ type VintraceResult<T> =
 | Tirage              | Ready   | `get`, `patch`                           |
 | BarrelsMovements    | Ready   | `post`                                   |
 | VesselDetailsReport | Ready   | `get`                                    |
+| WineBatches         | Ready   | `getAll`, `post`                         |
+| Documents           | Ready   | `attach`                                 |
+| Stock               | Ready   | `receive`, `getDispatches`               |
+| Vessels             | Ready   | `getBarrel`, `getBarrelGroup`, `getTank`, `getTankGroup`, `getTanker`, `getBin`, `createTank` |
+| PurchaseOrders      | Ready   | `get`, `post`                            |
 
 ---
 
