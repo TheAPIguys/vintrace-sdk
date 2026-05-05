@@ -182,4 +182,29 @@ describe.skipIf(!hasCredentials)('real API — read-only integration', { timeout
       }
     });
   });
+
+  // ── Wine Batches (v7) ────────────────────────────────────────────────────────
+  describe('v7.wineBatches', () => {
+    it('getAll() returns typed WineBatchData[]', async () => {
+      const [data, error] = await client.v7.wineBatches.getAll({ limit: 5 });
+      expect(error).toBeNull();
+      expect(Array.isArray(data)).toBe(true);
+      if (data && data.length > 0) {
+        const batch = data[0];
+        expect(typeof batch.id).toBe('number');
+        expect(typeof batch.batchCode).toBe('string');
+        if (batch.owner) {
+          expect(batch.owner.id).toBeDefined();
+        }
+        if (batch.winery) {
+          expect(batch.winery.id).toBeDefined();
+          expect(batch.winery.name).toBeDefined();
+        }
+        expect(typeof batch.productionYear).toBe('number');
+        if (batch.fractionType) {
+          expect(typeof batch.fractionType).toBe('string');
+        }
+      }
+    });
+  });
 });
