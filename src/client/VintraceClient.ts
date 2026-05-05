@@ -1457,6 +1457,7 @@ class WineBatchesClient {
     }
 
     const response = firstResponse[0];
+    // Defense-in-depth guard — only reached when response validation is disabled
     if (!response) {
       return [[], null];
     }

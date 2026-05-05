@@ -12,7 +12,7 @@ export const mockWineBatchItem: WineBatchData = {
   designatedRegion: { id: 32, name: 'Napa Valley' },
   designatedSubRegion: { id: 33, name: 'SubA' },
   designatedVariety: { id: 34, name: 'Shiraz' },
-  winery: { id: 5, name: 'My Winery', businessUnit: undefined },
+  winery: { id: 5, name: 'My Winery' },
   category: { id: 1, name: 'Bulk Wine' },
   designatedProduct: { id: 625, name: 'CHNAVPREM' },
   costsTrackedPercentage: 100,
