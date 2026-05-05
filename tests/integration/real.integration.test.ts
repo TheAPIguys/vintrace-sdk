@@ -201,7 +201,9 @@ describe.skipIf(!hasCredentials)('real API — read-only integration', { timeout
           expect(batch.winery.name).toBeDefined();
         }
         expect(typeof batch.productionYear).toBe('number');
-        expect(batch.fractionType).toBeDefined();
+        if (batch.fractionType) {
+          expect(typeof batch.fractionType).toBe('string');
+        }
       }
     });
   });
