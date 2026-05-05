@@ -56,6 +56,10 @@ import type {
   TransactionDetails,
   PurchaseOrder,
   PurchaseOrderResponse,
+  WineBatchData,
+  GetWineBatchSuccessResponse,
+  CreateWineBatchSuccessResponse,
+  CreateWineBatchRequest,
 } from '../validation/schemas';
 import {
   WorkOrderSearchResponseSchema,
@@ -102,6 +106,9 @@ import {
   FruitIntakeRequestSchema,
   PurchaseOrderResponseSchema,
   BlockResponseSchema,
+  GetWineBatchSuccessResponseSchema,
+  CreateWineBatchSuccessResponseSchema,
+  CreateWineBatchRequestSchema,
 } from '../validation/schemas';
 
 export interface WorkOrderListParams {
@@ -1429,20 +1436,27 @@ class WineBatchesClient {
    *
    * Returns a paginated list of wine batches.
    */
-  async getAll(params?: WineBatchesListParams): Promise<VintraceResult<unknown[]>> {
+  async getAll(params?: WineBatchesListParams): Promise<VintraceResult<WineBatchData[]>> {
     const limit = params?.limit ?? 100;
-    const firstResponse = await this.client.request<unknown>(
+    const queryParams: Record<string, string> = {
+      limit: String(limit),
+      offset: String(params?.offset ?? 0),
+    };
+    if (params?.ids) queryParams.ids = params.ids;
+    if (params?.include) queryParams.include = params.include;
+
+    const firstResponse = await this.client.request<GetWineBatchSuccessResponse>(
       'v7/operation/wine-batches',
       'GET',
-      {},
-      { ...params, limit: String(limit), offset: String(params?.offset ?? 0) }
+      { responseSchema: GetWineBatchSuccessResponseSchema },
+      queryParams
     );
 
     if (firstResponse[1]) {
       return [null, firstResponse[1]];
     }
 
-    const response = firstResponse[0] as { totalResults?: number; results?: unknown[] } | null;
+    const response = firstResponse[0];
     if (!response) {
       return [[], null];
     }
@@ -1454,20 +1468,20 @@ class WineBatchesClient {
 
     const pagesNeeded = Math.ceil(totalCount / limit);
     const parallelLimit = this.client.options.parallelLimit;
-    const allResults: unknown[] = [...(response.results ?? [])];
+    const allResults: WineBatchData[] = [...(response.results ?? [])];
 
     for (let i = 1; i < pagesNeeded; i += parallelLimit) {
       const batchSize = Math.min(parallelLimit, pagesNeeded - i);
-      const batchPromises: Promise<VintraceResult<unknown>>[] = [];
+      const batchPromises: Promise<VintraceResult<GetWineBatchSuccessResponse>>[] = [];
 
       for (let j = 0; j < batchSize; j++) {
-        const offset = (i + j) * limit;
+        const pageOffset = (i + j) * limit;
         batchPromises.push(
-          this.client.request<unknown>(
+          this.client.request<GetWineBatchSuccessResponse>(
             'v7/operation/wine-batches',
             'GET',
-            {},
-            { ...params, limit: String(limit), offset: String(offset) }
+            { responseSchema: GetWineBatchSuccessResponseSchema },
+            { ...queryParams, offset: String(pageOffset) }
           )
         );
       }
@@ -1477,9 +1491,8 @@ class WineBatchesClient {
         if (pageError) {
           return [null, pageError];
         }
-        const pData = pageData as { results?: unknown[] } | null;
-        if (pData?.results) {
-          allResults.push(...pData.results);
+        if (pageData?.results) {
+          allResults.push(...pageData.results);
         }
       }
     }
@@ -1490,8 +1503,16 @@ class WineBatchesClient {
   /**
    * Create a wine batch.
    */
-  create(data: unknown): Promise<VintraceResult<unknown>> {
-    return this.client.request<unknown>('v7/operation/wine-batches', 'POST', {}, data);
+  create(data: CreateWineBatchRequest): Promise<VintraceResult<CreateWineBatchSuccessResponse>> {
+    return this.client.request<CreateWineBatchSuccessResponse>(
+      'v7/operation/wine-batches',
+      'POST',
+      {
+        responseSchema: CreateWineBatchSuccessResponseSchema,
+        requestSchema: CreateWineBatchRequestSchema,
+      },
+      data
+    );
   }
 }
 

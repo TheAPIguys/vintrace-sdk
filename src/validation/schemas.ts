@@ -1470,3 +1470,74 @@ export const PurchaseOrderResponseSchema = z.object({
 export type PurchaseOrderLine = z.infer<typeof PurchaseOrderLineSchema>;
 export type PurchaseOrder = z.infer<typeof PurchaseOrderSchema>;
 export type PurchaseOrderResponse = z.infer<typeof PurchaseOrderResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Wine Batches (v7 /operation/wine-batches)
+// ---------------------------------------------------------------------------
+
+export const FractionTypeEnum = z.enum([
+  'FREE_RUN',
+  'PRESSINGS',
+  'MUST',
+  'LEES',
+  'UNKNOWN',
+  'COMBINED',
+  'CONDENSATE',
+  'PRESSINGS_LIGHT',
+  'PRESSINGS_HEAVY',
+  'DRAININGS',
+  'PRESSINGS_OVERNIGHT',
+  'SAIGNEE',
+]);
+
+const WineBatchVesselSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().optional(),
+  type: z
+    .enum(['TANK', 'BIN', 'BARREL', 'BARREL_GROUP', 'BIN_GROUP', 'PRESS', 'TANKER'])
+    .optional(),
+  amount: MeasurementSchema.optional(),
+});
+
+export const WineBatchDataSchema = z.object({
+  id: z.number().optional(),
+  batchCode: z.string().optional(),
+  batchNumber: z.string().optional(),
+  description: z.string().optional(),
+  productionYear: z.number().optional(),
+  owner: ExtIdentifiableEntitySchema.optional(),
+  grading: VesselGradingSchema.optional(),
+  program: IdentifiableEntitySchema.optional(),
+  designatedRegion: IdentifiableEntitySchema.optional(),
+  designatedSubRegion: IdentifiableEntitySchema.optional(),
+  designatedVariety: IdentifiableEntitySchema.optional(),
+  winery: WinerySchema.optional(),
+  category: IdentifiableEntitySchema.optional(),
+  designatedProduct: IdentifiableEntitySchema.optional(),
+  costsTrackedPercentage: z.number().optional(),
+  ageOfSpirits: z.string().optional(),
+  serviceOrder: IdentifiableEntitySchema.optional(),
+  fractionType: FractionTypeEnum.optional(),
+  inactive: z.boolean().optional(),
+  vessels: z.array(WineBatchVesselSchema).optional(),
+  allocations: z.array(AllocationSliceSchema).optional(),
+});
+
+export const GetWineBatchSuccessResponseSchema = PaginatedResponseSchema(WineBatchDataSchema);
+
+export const CreateWineBatchSuccessResponseSchema = z.object({
+  data: WineBatchDataSchema.optional(),
+});
+
+export const CreateWineBatchRequestSchema = WineBatchDataSchema.extend({
+  batchCode: z.string(),
+  productionYear: z.number(),
+  winery: WinerySchema,
+  owner: ExtIdentifiableEntitySchema,
+});
+
+export type FractionType = z.infer<typeof FractionTypeEnum>;
+export type WineBatchData = z.infer<typeof WineBatchDataSchema>;
+export type GetWineBatchSuccessResponse = z.infer<typeof GetWineBatchSuccessResponseSchema>;
+export type CreateWineBatchSuccessResponse = z.infer<typeof CreateWineBatchSuccessResponseSchema>;
+export type CreateWineBatchRequest = z.infer<typeof CreateWineBatchRequestSchema>;

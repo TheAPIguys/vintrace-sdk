@@ -50,4 +50,9 @@ export type {
   PurchaseOrderLine,
   BlockData,
   Block,
+  WineBatchData,
+  GetWineBatchSuccessResponse,
+  CreateWineBatchSuccessResponse,
+  CreateWineBatchRequest,
+  FractionType,
 } from './validation/schemas';
